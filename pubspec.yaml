@@ -1,0 +1,20 @@
+name: tab_container
+description: A beautiful, animated and customisable tab view widget.
+  Simply pass in a list of children and a list of tabs
+  or supply additional properties like colors, animations, and text styles.
+version: 0.0.1
+homepage: https://github.com/sourcemain/tab_container
+repository: https://github.com/sourcemain/tab_container
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^1.0.0
