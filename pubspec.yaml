@@ -1,8 +1,6 @@
 name: tab_container
-description: A beautiful, animated and customisable tab view widget.
-  Simply pass in a list of children and a list of tabs
-  or supply additional properties like colors, animations, and text styles.
-version: 0.0.1+1
+description: Animated and customisable tab view widget.
+version: 0.0.1+2
 homepage: https://github.com/sourcemain/tab_container
 repository: https://github.com/sourcemain/tab_container
 
