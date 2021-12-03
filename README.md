@@ -142,6 +142,7 @@ TabContainer(
 ## Additional information
 
 Icons used in the demo: [Ionicons](https://ionic.io/ionicons), [FontAwesome5](https://fontawesome.com/v5.15/icons?d=gallery&p=2&m=free)
+
 Car photos used in the demo:
  - [https://unsplash.com/photos/eqW1MPinEV4](https://unsplash.com/photos/eqW1MPinEV4)
  - [https://unsplash.com/photos/N9Pf2J656aQ](https://unsplash.com/photos/eqW1MPinEV4)
