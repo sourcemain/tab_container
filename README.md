@@ -2,7 +2,7 @@ A beautiful, animated, and customisable tab view widget.
 This widget is self-contained, so you can just pass in a list of children and a list of tabs and it will handle the rest.
 You can also use a controller, change the tab side, add color(s), and much more.
 
-> This package is in beta. Please [file any potential issues.](https://github.com/sourcemain/tab_container/issues)
+> Please [file any potential issues.](https://github.com/sourcemain/tab_container/issues)
 
 ## Features
 

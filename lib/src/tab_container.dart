@@ -58,6 +58,7 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     Curve? childCurve,
     this.controller,
     this.radius = 12.0,
+    this.childPadding = EdgeInsets.zero,
     required this.children,
     required this.tabs,
     this.tabExtent = 50.0,
@@ -71,7 +72,6 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     this.unselectedTextStyle,
     this.textDirection,
     this.enabled = true,
-    this.usesTextWidget = false,
     VoidCallback? onEnd,
   })  : assert(children.length == tabs.length),
         assert(controller == null ? true : controller.length == tabs.length),
@@ -79,8 +79,6 @@ class TabContainer extends ImplicitlyAnimatedWidget {
         assert((colors ?? tabs).length == tabs.length),
         assert(radius >= 0),
         assert(tabExtent >= 0),
-        assert(!(usesTextWidget &&
-            (selectedTextStyle != null || unselectedTextStyle != null))),
         childDuration = childDuration ?? tabDuration,
         childCurve = childCurve ?? tabCurve,
         super(
@@ -100,6 +98,11 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// Defaults to 12.0.
   final double radius;
 
+  /// Sets the padding to be applied around all [children].
+  ///
+  /// Defaults to [EdgeInsets.zero].
+  final EdgeInsets childPadding;
+
   /// The list of children you want to tab through, in order.
   ///
   /// Must be equal in length to [tabs] and [colors] (if provided).
@@ -107,7 +110,6 @@ class TabContainer extends ImplicitlyAnimatedWidget {
 
   /// What will be displayed in each tab, in order.
   ///
-  /// When providing something other than List<String>, set [usesTextWidget] to true.
   /// Must be equal in length to [children] and [colors] (if provided).
   final List<dynamic> tabs;
 
@@ -141,7 +143,7 @@ class TabContainer extends ImplicitlyAnimatedWidget {
 
   /// The curve of the animation that controls tab indicator sliding.
   ///
-  /// Defaults to Curves.easeInOut.
+  /// Defaults to [Curves.easeInOut].
   final Curve tabCurve;
 
   /// Duration of the child transition animation when the tab selection changes.
@@ -159,12 +161,12 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// Defaults to [AnimatedSwitcher.defaultTransitionBuilder].
   final Widget Function(Widget, Animation<double>)? transitionBuilder;
 
-  /// The [TextStyle] applied to the text of the currently selected tab if [usesTextWidget] is false.
+  /// The [TextStyle] applied to the text of the currently selected tab.
   ///
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? selectedTextStyle;
 
-  /// The [TextStyle] applied to the text of currently unselected tabs if [usesTextWidget] is false.
+  /// The [TextStyle] applied to the text of currently unselected tabs.
   ///
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? unselectedTextStyle;
@@ -178,9 +180,6 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   ///
   /// Defaults to true.
   final bool enabled;
-
-  /// Set to true if the tabs property is not of type List<String>.
-  final bool usesTextWidget;
 
   @override
   _TabContainerState createState() => _TabContainerState();
@@ -271,7 +270,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
         Semantics(
           label: 'Tab $i',
           hint: 'Press to switch to this tab',
-          value: widget.usesTextWidget ? '' : widget.tabs[i],
+          value: widget.tabs is! List<String> ? '' : widget.tabs[i],
           selected: i == _currentIndex,
           enabled: widget.enabled,
           onTap: !widget.enabled
@@ -283,7 +282,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
             alignment: Alignment.center,
             transform: Matrix4.identity()..scale(scale),
             child: Container(
-              child: widget.usesTextWidget
+              child: widget.tabs is! List<String>
                   ? widget.tabs[i]
                   : Text(widget.tabs[i],
                       textAlign: TextAlign.center,
@@ -371,15 +370,18 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
               CurvedAnimation(parent: animation, curve: widget.curve)) ??
           0.0,
       radius: widget.radius,
-      child: AnimatedSwitcher(
-        duration: widget.childDuration!,
-        switchInCurve: widget.childCurve!,
-        transitionBuilder: widget.transitionBuilder ??
-            AnimatedSwitcher.defaultTransitionBuilder,
-        child: IndexedStack(
-          key: ValueKey<int>(_currentIndex),
-          index: _currentIndex,
-          children: widget.children,
+      child: Padding(
+        padding: widget.childPadding,
+        child: AnimatedSwitcher(
+          duration: widget.childDuration!,
+          switchInCurve: widget.childCurve!,
+          transitionBuilder: widget.transitionBuilder ??
+              AnimatedSwitcher.defaultTransitionBuilder,
+          child: IndexedStack(
+            key: ValueKey<int>(_currentIndex),
+            index: _currentIndex,
+            children: widget.children,
+          ),
         ),
       ),
       tabs: _getTabs(),
@@ -399,7 +401,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final TabContainerController controller;
   final double progress;
   final double radius;
-  final AnimatedSwitcher child;
+  final Widget child;
   final List<Semantics> tabs;
   final double tabExtent;
   final TabEdge tabEdge;
