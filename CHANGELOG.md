@@ -1,3 +1,11 @@
+## 1.0.0+2
+
+Fix CHANGELOG.md, pubspec.yaml
+
+## 1.0.0+1
+
+Update README.md
+
 ## 1.0.0
 
 BREAKING:
