@@ -318,6 +318,12 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
     }
   }
 
+  void _listen() {
+    _currentIndex = _controller?.index ?? 0;
+    _prevIndex = _controller?.prevIndex ?? 0;
+    super.didUpdateWidget(super.widget);
+  }
+
   @override
   void initState() {
     _controller =
@@ -326,11 +332,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
     _currentIndex = _controller!.index;
     _prevIndex = _controller!.index;
 
-    _controller!.addListener(() {
-      _currentIndex = _controller?.index ?? 0;
-      _prevIndex = _controller?.prevIndex ?? 0;
-      super.didUpdateWidget(super.widget);
-    });
+    _controller!.addListener(_listen);
 
     super.initState();
   }
@@ -351,7 +353,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
 
   @override
   void dispose() {
-    _controller?.removeListener(() {});
+    _controller?.removeListener(_listen);
 
     if (widget.controller == null) {
       _controller?.dispose();

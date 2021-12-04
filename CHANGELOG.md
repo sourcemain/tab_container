@@ -1,3 +1,7 @@
+## 1.0.1
+
+Fix 'TabContainerController' listener removal.
+
 ## 1.0.0+2
 
 Fix CHANGELOG.md, pubspec.yaml
