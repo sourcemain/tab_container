@@ -1,3 +1,10 @@
+## 1.1.0
+
+Major improvements:
+ - Add 'tabStart' and 'tabEnd' properties. Specify where, along the side, tabs begin and end.
+ - Refactor child hit testing.
+ - Update README.md and example/lib/main.dart to reflect changes.
+
 ## 1.0.1
 
 Fix 'TabContainerController' listener removal.

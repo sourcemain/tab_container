@@ -9,6 +9,7 @@ You can also use a controller, change the tab side, add color(s), and much more.
 ![](https://media.giphy.com/media/cEkR19IlJ4My225oGg/giphy.gif)
 ![](https://media.giphy.com/media/UlPs2jVLFEypV0KtwV/giphy.gif)
 ![](https://media.giphy.com/media/pCMsQiashXbfc6VZDg/giphy.gif)
+![](https://media.giphy.com/media/ea0JPX6894p1QHRCh4/giphy.gif)
 
 Currently available parameters:
 ```dart
@@ -49,6 +50,16 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     /// Defaults to [TabEdge.top].
     final TabEdge tabEdge;
     
+    /// Fraction of the way down the tab edge that the first tab should begin.
+    ///
+    /// Defaults to 0.0.
+    final double tabStart;
+    
+    /// Fraction of the way down the tab edge that the last tab should end.
+    ///
+    /// Defaults to 1.0.
+    final double tabEnd;
+    
     /// The background color of this widget.
     ///
     /// Must not set if [colors] is provided.
@@ -88,11 +99,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     
     /// The [TextStyle] applied to the text of the currently selected tab.
     ///
+    /// Must specify the same properties as [unselectedTextStyle].
     /// Defaults to Theme.of(context).textTheme.bodyText2.
     final TextStyle? selectedTextStyle;
     
     /// The [TextStyle] applied to the text of currently unselected tabs.
     ///
+    /// Must specify the same properties as [selectedTextStyle].
     /// Defaults to Theme.of(context).textTheme.bodyText2.
     final TextStyle? unselectedTextStyle;
     

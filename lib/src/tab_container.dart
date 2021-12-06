@@ -63,6 +63,8 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     required this.tabs,
     this.tabExtent = 50.0,
     this.tabEdge = TabEdge.top,
+    this.tabStart = 0.0,
+    this.tabEnd = 1.0,
     this.color,
     this.colors,
     this.tabDuration = const Duration(milliseconds: 300),
@@ -79,6 +81,8 @@ class TabContainer extends ImplicitlyAnimatedWidget {
         assert((colors ?? tabs).length == tabs.length),
         assert(radius >= 0),
         assert(tabExtent >= 0),
+        assert(0.0 <= tabStart && tabStart < tabEnd && tabEnd <= 1.0),
+        assert((selectedTextStyle == null) == (unselectedTextStyle == null)),
         childDuration = childDuration ?? tabDuration,
         childCurve = childCurve ?? tabCurve,
         super(
@@ -124,6 +128,16 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// Defaults to [TabEdge.top].
   final TabEdge tabEdge;
 
+  /// Fraction of the way down the tab edge that the first tab should begin.
+  ///
+  /// Defaults to 0.0.
+  final double tabStart;
+
+  /// Fraction of the way down the tab edge that the last tab should end.
+  ///
+  /// Defaults to 1.0.
+  final double tabEnd;
+
   /// The background color of this widget.
   ///
   /// Must not set if [colors] is provided.
@@ -163,11 +177,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
 
   /// The [TextStyle] applied to the text of the currently selected tab.
   ///
+  /// Must specify the same properties as [unselectedTextStyle].
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? selectedTextStyle;
 
   /// The [TextStyle] applied to the text of currently unselected tabs.
   ///
+  /// Must specify the same properties as [selectedTextStyle].
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? unselectedTextStyle;
 
@@ -389,6 +405,8 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
       tabs: _getTabs(),
       tabExtent: _tabExtent,
       tabEdge: widget.tabEdge,
+      tabStart: widget.tabStart,
+      tabEnd: widget.tabEnd,
       color: phase?.evaluate(
               CurvedAnimation(parent: animation, curve: widget.curve)) ??
           widget.color ??
@@ -407,6 +425,8 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final List<Semantics> tabs;
   final double tabExtent;
   final TabEdge tabEdge;
+  final double tabStart;
+  final double tabEnd;
   final Color color;
   final bool enabled;
   final TextDirection textDirection;
@@ -420,6 +440,8 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.tabs,
     required this.tabExtent,
     required this.tabEdge,
+    required this.tabStart,
+    required this.tabEnd,
     required this.color,
     required this.enabled,
     required this.textDirection,
@@ -434,6 +456,8 @@ class TabFrame extends MultiChildRenderObjectWidget {
       tabs: tabs,
       tabExtent: tabExtent,
       tabEdge: tabEdge,
+      tabStart: tabStart,
+      tabEnd: tabEnd,
       color: color,
       enabled: enabled,
       textDirection: textDirection,
@@ -449,6 +473,8 @@ class TabFrame extends MultiChildRenderObjectWidget {
       ..tabs = tabs
       ..tabExtent = tabExtent
       ..tabEdge = tabEdge
+      ..tabStart = tabStart
+      ..tabEnd = tabEnd
       ..color = color
       ..enabled = enabled
       ..textDirection = textDirection;
@@ -467,6 +493,8 @@ class RenderTabFrame extends RenderBox
   List<Semantics> _tabs;
   double _tabExtent;
   TabEdge _tabEdge;
+  double _tabStart;
+  double _tabEnd;
   Color _color;
   bool _enabled;
   TextDirection _textDirection;
@@ -478,6 +506,8 @@ class RenderTabFrame extends RenderBox
     required List<Semantics> tabs,
     required double tabExtent,
     required TabEdge tabEdge,
+    required double tabStart,
+    required double tabEnd,
     required Color color,
     required bool enabled,
     required TextDirection textDirection,
@@ -487,6 +517,8 @@ class RenderTabFrame extends RenderBox
         _tabs = tabs,
         _tabExtent = tabExtent,
         _tabEdge = tabEdge,
+        _tabStart = tabStart,
+        _tabEnd = tabEnd,
         _color = color,
         _enabled = enabled,
         _textDirection = textDirection;
@@ -533,6 +565,18 @@ class RenderTabFrame extends RenderBox
     markNeedsLayout();
   }
 
+  set tabStart(double value) {
+    if (value == _tabStart) return;
+    _tabStart = value;
+    markNeedsLayout();
+  }
+
+  set tabEnd(double value) {
+    if (value == _tabEnd) return;
+    _tabEnd = value;
+    markNeedsLayout();
+  }
+
   set color(Color value) {
     if (value == _color) return;
     _color = value;
@@ -549,6 +593,18 @@ class RenderTabFrame extends RenderBox
     if (value == _textDirection) return;
     _textDirection = value;
     markNeedsSemanticsUpdate();
+  }
+
+  double _tabRange(double sideLength) {
+    return _tabEndPosition(sideLength) - _tabStartPosition(sideLength);
+  }
+
+  double _tabStartPosition(double sideLength) {
+    return sideLength * _tabStart;
+  }
+
+  double _tabEndPosition(double sideLength) {
+    return sideLength * _tabEnd;
   }
 
   @override
@@ -576,51 +632,68 @@ class RenderTabFrame extends RenderBox
   late TapGestureRecognizer _tapRecognizer;
 
   void _onTapDown(TapDownDetails details) {
+    final double dx = details.localPosition.dx;
+    final double dy = details.localPosition.dy;
+    final double startWidth = _tabStartPosition(size.width);
+    final double endWidth = _tabEndPosition(size.width);
+    final double startHeight = _tabStartPosition(size.height);
+    final double endHeight = _tabEndPosition(size.height);
+    final double widthRange = _tabRange(size.width);
+    final double heightRange = _tabRange(size.height);
+
     switch (_tabEdge) {
       case TabEdge.left:
-        if (details.localPosition.dx <= _tabExtent + _radius) {
-          final double tabHeight = size.height / _tabs.length;
+        if (dx <= _tabExtent + _radius) {
+          final double tabHeight = heightRange / _tabs.length;
 
           for (int i = 1; i <= _tabs.length; i++) {
-            if (details.localPosition.dy < i * tabHeight) {
-              _controller.jumpTo(i - 1);
-              return;
+            if (startHeight <= dy && dy <= endHeight) {
+              if (dy < i * tabHeight + startHeight) {
+                _controller.jumpTo(i - 1);
+                return;
+              }
             }
           }
         }
         return;
       case TabEdge.top:
-        if (details.localPosition.dy <= _tabExtent + _radius) {
-          final double tabWidth = size.width / _tabs.length;
+        if (dy <= _tabExtent + _radius) {
+          final double tabWidth = widthRange / _tabs.length;
 
           for (int i = 1; i <= _tabs.length; i++) {
-            if (details.localPosition.dx < i * tabWidth) {
-              _controller.jumpTo(i - 1);
-              return;
+            if (startWidth <= dx && dx <= endWidth) {
+              if (dx < i * tabWidth + startWidth) {
+                _controller.jumpTo(i - 1);
+                return;
+              }
             }
           }
         }
         return;
       case TabEdge.right:
-        if (details.localPosition.dx >= size.width - _tabExtent - _radius) {
-          final double tabHeight = size.height / _tabs.length;
+        if (dx >= size.width - _tabExtent - _radius) {
+          final double tabHeight = heightRange / _tabs.length;
 
           for (int i = 1; i <= _tabs.length; i++) {
-            if (details.localPosition.dy < i * tabHeight) {
-              _controller.jumpTo(i - 1);
-              return;
+            if (startHeight <= dy && dy <= endHeight) {
+              if (dy < i * tabHeight + startHeight) {
+                _controller.jumpTo(i - 1);
+                return;
+              }
             }
           }
         }
         return;
       case TabEdge.bottom:
-        if (details.localPosition.dy >= size.height - _tabExtent - _radius) {
-          final double tabWidth = size.width / _tabs.length;
+        if (dy >= size.height - _tabExtent - _radius) {
+          final double tabWidth = widthRange / _tabs.length;
 
           for (int i = 1; i <= _tabs.length; i++) {
-            if (details.localPosition.dx < i * tabWidth) {
-              _controller.jumpTo(i - 1);
-              return;
+            if (startWidth <= dx && dx <= endWidth) {
+              if (dx < i * tabWidth + startWidth) {
+                _controller.jumpTo(i - 1);
+                return;
+              }
             }
           }
         }
@@ -634,12 +707,32 @@ class RenderTabFrame extends RenderBox
   }
 
   @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    var child = firstChild;
+    final TabFrameParentData childParentData =
+        child?.parentData as TabFrameParentData;
+    final bool isHit = result.addWithPaintOffset(
+      offset: childParentData.offset,
+      position: position,
+      hitTest: (BoxHitTestResult result, Offset? transformed) {
+        assert(transformed == position - childParentData.offset);
+        return child!.hitTest(result, position: transformed!);
+      },
+    );
+    if (isHit) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
   void handleEvent(PointerEvent event, covariant HitTestEntry entry) {
     assert(debugHandleEvent(event, entry));
 
     if (event is PointerDownEvent) {
       _tapRecognizer.addPointer(event);
     }
+    firstChild?.handleEvent(event, entry as BoxHitTestEntry);
   }
 
   @override
@@ -684,11 +777,11 @@ class RenderTabFrame extends RenderBox
     late final BoxConstraints textConstraints;
 
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
-      tabBreadth = size.height / _tabs.length;
+      tabBreadth = _tabRange(size.height) / _tabs.length;
       textConstraints =
           BoxConstraints(maxWidth: _tabExtent, maxHeight: tabBreadth);
     } else {
-      tabBreadth = size.width / _tabs.length;
+      tabBreadth = _tabRange(size.width) / _tabs.length;
       textConstraints =
           BoxConstraints(maxWidth: tabBreadth, maxHeight: _tabExtent);
     }
@@ -707,17 +800,21 @@ class RenderTabFrame extends RenderBox
 
       switch (_tabEdge) {
         case TabEdge.left:
-          textOffset = Offset(horizontalGap, verticalGap + indexOffset);
+          textOffset = Offset(horizontalGap,
+              verticalGap + indexOffset + _tabStartPosition(size.height));
           break;
         case TabEdge.top:
-          textOffset = Offset(horizontalGap + indexOffset, verticalGap);
+          textOffset = Offset(
+              horizontalGap + indexOffset + _tabStartPosition(size.width),
+              verticalGap);
           break;
         case TabEdge.right:
           textOffset = Offset(size.width - horizontalGap - child.size.width,
-              verticalGap + indexOffset);
+              verticalGap + indexOffset + _tabStartPosition(size.height));
           break;
         case TabEdge.bottom:
-          textOffset = Offset(horizontalGap + indexOffset,
+          textOffset = Offset(
+              horizontalGap + indexOffset + _tabStartPosition(size.width),
               size.height - verticalGap - child.size.height);
           break;
       }
@@ -739,28 +836,34 @@ class RenderTabFrame extends RenderBox
   double computeMinIntrinsicWidth(double height) {
     final double childMinIntrinsicWidth =
         firstChild?.getMinIntrinsicWidth(height) ?? 0.0;
+    final altMinIntrinsicWidth =
+        _radius * 2 * _tabs.length / (_tabEnd - _tabStart);
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
       return childMinIntrinsicWidth + _tabExtent;
     }
-    return max(childMinIntrinsicWidth, _radius * 2 * _tabs.length);
+    return max(childMinIntrinsicWidth, altMinIntrinsicWidth);
   }
 
   @override
   double computeMaxIntrinsicWidth(double height) {
     final double childMaxIntrinsicWidth =
         firstChild?.getMaxIntrinsicWidth(height) ?? 0.0;
+    final altMaxIntrinsicWidth =
+        _radius * 2 * _tabs.length / (_tabEnd - _tabStart);
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
       return childMaxIntrinsicWidth + _tabExtent;
     }
-    return max(childMaxIntrinsicWidth, _radius * 2 * _tabs.length);
+    return max(childMaxIntrinsicWidth, altMaxIntrinsicWidth);
   }
 
   @override
   double computeMinIntrinsicHeight(double width) {
     final double childMinIntrinsicHeight =
         firstChild?.getMinIntrinsicHeight(width) ?? 0.0;
+    final altMinIntrinsicHeight =
+        _radius * 2 * _tabs.length / (_tabEnd - _tabStart);
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
-      return max(childMinIntrinsicHeight, _radius * 2 * _tabs.length);
+      return max(childMinIntrinsicHeight, altMinIntrinsicHeight);
     }
     return childMinIntrinsicHeight + _tabExtent;
   }
@@ -769,8 +872,10 @@ class RenderTabFrame extends RenderBox
   double computeMaxIntrinsicHeight(double width) {
     final double childMaxIntrinsicHeight =
         firstChild?.getMaxIntrinsicHeight(width) ?? 0.0;
+    final altMaxIntrinsicHeight =
+        _radius * 2 * _tabs.length / (_tabEnd - _tabStart);
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
-      return max(childMaxIntrinsicHeight, _radius * 2 * _tabs.length);
+      return max(childMaxIntrinsicHeight, altMaxIntrinsicHeight);
     }
     return childMaxIntrinsicHeight + _tabExtent;
   }
@@ -785,14 +890,15 @@ class RenderTabFrame extends RenderBox
     final double width = size.width;
     final double height = size.height;
 
-    double tabBreadth = size.width / _tabs.length;
+    double tabBreadth = _tabRange(size.width) / _tabs.length;
+    double leftPos = _progress * tabBreadth + _tabStartPosition(size.width);
+    double rightPos = leftPos + tabBreadth;
 
     if (_tabEdge == TabEdge.left || _tabEdge == TabEdge.right) {
-      tabBreadth = size.height / _tabs.length;
+      tabBreadth = _tabRange(size.height) / _tabs.length;
+      leftPos = _progress * tabBreadth + _tabStartPosition(size.height);
+      rightPos = leftPos + tabBreadth;
     }
-
-    final double leftPos = _progress * tabBreadth;
-    final double rightPos = leftPos + tabBreadth;
 
     final Path horizontalPath = Path()
       ..moveTo(0, _radius)
