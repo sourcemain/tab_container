@@ -74,6 +74,7 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     this.unselectedTextStyle,
     this.textDirection,
     this.enabled = true,
+    this.enableFeedback = true,
     VoidCallback? onEnd,
   })  : assert(children.length == tabs.length),
         assert(controller == null ? true : controller.length == tabs.length),
@@ -140,13 +141,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
 
   /// The background color of this widget.
   ///
-  /// Must not set if [colors] is provided.
+  /// Must not be set if [colors] is provided.
   final Color? color;
 
   /// The list of colors used for each tab, in order.
   ///
   /// The first color in the list will be the background color when tab 1 is selected and so on.
-  /// Must not set if [color] is provided.
+  /// Must not be set if [color] is provided.
   final List<Color>? colors;
 
   /// Duration for the tab indicator to slide to a new index.
@@ -177,13 +178,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
 
   /// The [TextStyle] applied to the text of the currently selected tab.
   ///
-  /// Must specify the same properties as [unselectedTextStyle].
+  /// Must specify values for the same properties as [unselectedTextStyle].
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? selectedTextStyle;
 
   /// The [TextStyle] applied to the text of currently unselected tabs.
   ///
-  /// Must specify the same properties as [selectedTextStyle].
+  /// Must specify values for the same properties as [selectedTextStyle].
   /// Defaults to Theme.of(context).textTheme.bodyText2.
   final TextStyle? unselectedTextStyle;
 
@@ -196,6 +197,11 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   ///
   /// Defaults to true.
   final bool enabled;
+
+  /// Whether detected gestures on tabs should provide acoustic and/or haptic feedback.
+  ///
+  /// Defaults to true.
+  final bool enableFeedback;
 
   @override
   _TabContainerState createState() => _TabContainerState();
@@ -412,6 +418,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
           widget.color ??
           Colors.transparent,
       enabled: widget.enabled,
+      enableFeedback: widget.enableFeedback,
       textDirection: _textDirection,
     );
   }
@@ -429,6 +436,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final double tabEnd;
   final Color color;
   final bool enabled;
+  final bool enableFeedback;
   final TextDirection textDirection;
 
   TabFrame({
@@ -444,12 +452,14 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.tabEnd,
     required this.color,
     required this.enabled,
+    required this.enableFeedback,
     required this.textDirection,
   }) : super(key: key, children: [child, ...tabs]);
 
   @override
   RenderTabFrame createRenderObject(BuildContext context) {
     return RenderTabFrame(
+      context: context,
       controller: controller,
       progress: progress,
       radius: radius,
@@ -460,6 +470,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       tabEnd: tabEnd,
       color: color,
       enabled: enabled,
+      enableFeedback: enableFeedback,
       textDirection: textDirection,
     );
   }
@@ -467,6 +478,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   @override
   void updateRenderObject(BuildContext context, RenderTabFrame renderObject) {
     renderObject
+      ..context = context
       ..controller = controller
       ..progress = progress
       ..radius = radius
@@ -477,6 +489,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       ..tabEnd = tabEnd
       ..color = color
       ..enabled = enabled
+      ..enableFeedback = enableFeedback
       ..textDirection = textDirection;
   }
 }
@@ -487,6 +500,7 @@ class RenderTabFrame extends RenderBox
     with
         ContainerRenderObjectMixin<RenderBox, TabFrameParentData>,
         RenderBoxContainerDefaultsMixin<RenderBox, TabFrameParentData> {
+  BuildContext _context;
   TabContainerController _controller;
   double _progress;
   double _radius;
@@ -497,9 +511,11 @@ class RenderTabFrame extends RenderBox
   double _tabEnd;
   Color _color;
   bool _enabled;
+  bool _enableFeedback;
   TextDirection _textDirection;
 
   RenderTabFrame({
+    required BuildContext context,
     required TabContainerController controller,
     required double progress,
     required double radius,
@@ -510,8 +526,10 @@ class RenderTabFrame extends RenderBox
     required double tabEnd,
     required Color color,
     required bool enabled,
+    required bool enableFeedback,
     required TextDirection textDirection,
-  })  : _controller = controller,
+  })  : _context = context,
+        _controller = controller,
         _progress = progress,
         _radius = radius,
         _tabs = tabs,
@@ -521,7 +539,13 @@ class RenderTabFrame extends RenderBox
         _tabEnd = tabEnd,
         _color = color,
         _enabled = enabled,
+        _enableFeedback = enableFeedback,
         _textDirection = textDirection;
+
+  set context(BuildContext value) {
+    if (value == _context) return;
+    _context = value;
+  }
 
   set controller(TabContainerController value) {
     if (value == _controller) return;
@@ -586,7 +610,13 @@ class RenderTabFrame extends RenderBox
   set enabled(bool value) {
     if (value == _enabled) return;
     _enabled = value;
+    _tapRecognizer.onTapDown = !_enabled ? null : _onTapDown;
     markNeedsSemanticsUpdate();
+  }
+
+  set enableFeedback(bool value) {
+    if (value == _enableFeedback) return;
+    _enableFeedback = value;
   }
 
   set textDirection(TextDirection value) {
@@ -650,6 +680,9 @@ class RenderTabFrame extends RenderBox
             if (startHeight <= dy && dy <= endHeight) {
               if (dy < i * tabHeight + startHeight) {
                 _controller.jumpTo(i - 1);
+                if (_enableFeedback) {
+                  Feedback.forTap(_context);
+                }
                 return;
               }
             }
@@ -664,6 +697,9 @@ class RenderTabFrame extends RenderBox
             if (startWidth <= dx && dx <= endWidth) {
               if (dx < i * tabWidth + startWidth) {
                 _controller.jumpTo(i - 1);
+                if (_enableFeedback) {
+                  Feedback.forTap(_context);
+                }
                 return;
               }
             }
@@ -678,6 +714,9 @@ class RenderTabFrame extends RenderBox
             if (startHeight <= dy && dy <= endHeight) {
               if (dy < i * tabHeight + startHeight) {
                 _controller.jumpTo(i - 1);
+                if (_enableFeedback) {
+                  Feedback.forTap(_context);
+                }
                 return;
               }
             }
@@ -692,6 +731,9 @@ class RenderTabFrame extends RenderBox
             if (startWidth <= dx && dx <= endWidth) {
               if (dx < i * tabWidth + startWidth) {
                 _controller.jumpTo(i - 1);
+                if (_enableFeedback) {
+                  Feedback.forTap(_context);
+                }
                 return;
               }
             }

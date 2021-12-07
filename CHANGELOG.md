@@ -1,3 +1,8 @@
+## 1.2.0
+
+Add 'enableFeedback' property for acoustic and/or haptic feedback on tab gestures.
+Update REAMDE.md.
+
 ## 1.1.0
 
 Major improvements:
