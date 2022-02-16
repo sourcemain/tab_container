@@ -920,7 +920,7 @@ class RenderTabFrame extends RenderBox
 
   @override
   double? computeDistanceToActualBaseline(TextBaseline baseline) {
-    defaultComputeDistanceToHighestActualBaseline(baseline);
+    return defaultComputeDistanceToHighestActualBaseline(baseline);
   }
 
   @override
