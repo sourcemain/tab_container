@@ -1,3 +1,7 @@
+## 1.2.1
+
+Fix static analysis error
+
 ## 1.2.0
 
 Add 'enableFeedback' property for acoustic and/or haptic feedback on tab gestures.

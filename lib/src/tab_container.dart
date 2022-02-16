@@ -1,11 +1,9 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
 /// Specifies which side the tabs will be on.
 enum TabEdge { left, top, right, bottom }
@@ -343,7 +341,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
   void _listen() {
     _currentIndex = _controller?.index ?? 0;
     _prevIndex = _controller?.prevIndex ?? 0;
-    super.didUpdateWidget(super.widget);
+    super.didUpdateWidget(widget);
   }
 
   @override
@@ -355,7 +353,6 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
     _prevIndex = _controller!.index;
 
     _controller!.addListener(_listen);
-
     super.initState();
   }
 
@@ -369,7 +366,6 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     _tabExtent = max(widget.tabExtent, widget.radius * 2);
-
     super.didChangeDependencies();
   }
 
