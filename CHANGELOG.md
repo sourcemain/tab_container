@@ -1,3 +1,7 @@
+## 1.2.2
+
+Fix static analysis error
+
 ## 1.2.1
 
 Fix static analysis error
