@@ -119,6 +119,7 @@ class _ExamplePageState extends State<ExamplePage> {
                     childPadding: const EdgeInsets.all(20.0),
                     children: _getChildren3(context),
                     tabs: _getTabs3(context),
+                    isStringTabs: false,
                   ),
                 ),
               ),

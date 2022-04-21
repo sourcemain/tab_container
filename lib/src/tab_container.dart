@@ -59,6 +59,7 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     this.childPadding = EdgeInsets.zero,
     required this.children,
     required this.tabs,
+    this.isStringTabs = true,
     this.tabExtent = 50.0,
     this.tabEdge = TabEdge.top,
     this.tabStart = 0.0,
@@ -115,6 +116,12 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   ///
   /// Must be equal in length to [children] and [colors] (if provided).
   final List<dynamic> tabs;
+
+  /// Whether the value passed to [tabs] is of type List<String> or List<Widget>.
+  ///
+  /// Must be true if [tabs] is a List<String>, and false if [tabs] is a List<Widget>.
+  /// Defaults to true.
+  final bool isStringTabs;
 
   /// Determines how much space the tabs take up.
   ///
@@ -290,7 +297,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
         Semantics(
           label: 'Tab $i',
           hint: 'Press to switch to this tab',
-          value: widget.tabs is! List<String> ? '' : widget.tabs[i],
+          value: !widget.isStringTabs ? '' : widget.tabs[i],
           selected: i == _currentIndex,
           enabled: widget.enabled,
           onTap: !widget.enabled
@@ -302,7 +309,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
             alignment: Alignment.center,
             transform: Matrix4.identity()..scale(scale),
             child: Container(
-              child: widget.tabs is! List<String>
+              child: !widget.isStringTabs
                   ? widget.tabs[i]
                   : Text(widget.tabs[i],
                       textAlign: TextAlign.center,

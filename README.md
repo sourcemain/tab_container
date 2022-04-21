@@ -41,6 +41,12 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// Must be equal in length to [children] and [colors] (if provided).
   final List<dynamic> tabs;
 
+  /// Whether the value passed to [tabs] is of type List<String> or List<Widget>.
+  ///
+  /// Must be true if [tabs] is a List<String>, and false if [tabs] is a List<Widget>.
+  /// Defaults to true.
+  final bool isStringTabs;
+
   /// Determines how much space the tabs take up.
   ///
   /// If the tabs are on the left/right then this will be the tab width, otherwise it will be the tab height.
@@ -159,6 +165,8 @@ TabContainer(
   ],
 ),
 ```
+You must supply `isStringTabs: false` if `tabs` is a `List<Widget>` instead.
+
 
 ## Additional information
 

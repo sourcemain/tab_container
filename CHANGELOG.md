@@ -1,3 +1,13 @@
+## 2.0.0
+
+BREAKING:
+ - Remove type checking of 'tabs' behind the scenes in favor of greater clarity: it is now on the 
+developer to specify the type of 'tabs' using the new 'isStringTabs' parameter. Set it to 'false' 
+if your 'tabs' value is a 'List<Widget>'; leave it as 'true' if 'tabs' is a 'List<String>'.
+ - Update example/lib/main.dart to reflect changes.
+ - Update pubspec.yaml.
+ - Update README.md.
+
 ## 1.2.2
 
 Fix static analysis error
