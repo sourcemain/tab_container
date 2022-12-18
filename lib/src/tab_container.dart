@@ -41,6 +41,7 @@ class TabContainerController extends ValueNotifier<int> {
     if (newIndex >= 0 && newIndex < length) {
       _prevIndex = _index;
       _index = newIndex;
+      value = _index;
       notifyListeners();
     }
   }
