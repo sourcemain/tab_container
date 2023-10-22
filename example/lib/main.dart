@@ -71,9 +71,9 @@ class _ExamplePageState extends State<ExamplePage> {
                       Color(0xff9aebed),
                     ],
                     selectedTextStyle:
-                        textTheme.bodyText2?.copyWith(fontSize: 15.0),
+                        textTheme.bodyMedium?.copyWith(fontSize: 15.0),
                     unselectedTextStyle:
-                        textTheme.bodyText2?.copyWith(fontSize: 13.0),
+                        textTheme.bodyMedium?.copyWith(fontSize: 13.0),
                     children: _getChildren1(),
                     tabs: _getTabs1(),
                   ),
@@ -88,9 +88,9 @@ class _ExamplePageState extends State<ExamplePage> {
                   color: Colors.black,
                   tabDuration: const Duration(seconds: 0),
                   selectedTextStyle:
-                      textTheme.bodyText2?.copyWith(color: Colors.white),
+                      textTheme.bodyMedium?.copyWith(color: Colors.white),
                   unselectedTextStyle:
-                      textTheme.bodyText2?.copyWith(color: Colors.black),
+                      textTheme.bodyMedium?.copyWith(color: Colors.black),
                   children: _getChildren2(),
                   tabs: _getTabs2(),
                 ),
@@ -100,11 +100,11 @@ class _ExamplePageState extends State<ExamplePage> {
                 children: [
                   IconButton(
                     onPressed: () => _controller.prev(),
-                    icon: Icon(Ionicons.arrow_back),
+                    icon: const Icon(Ionicons.arrow_back),
                   ),
                   IconButton(
                     onPressed: () => _controller.next(),
-                    icon: Icon(Ionicons.arrow_forward),
+                    icon: const Icon(Ionicons.arrow_forward),
                   ),
                 ],
               ),
@@ -195,7 +195,7 @@ class _ExamplePageState extends State<ExamplePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Info', style: Theme.of(context).textTheme.headline5),
+            Text('Info', style: Theme.of(context).textTheme.headlineSmall),
             const Text(
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non ex ac metus facilisis pulvinar. In id nulla tellus. Donec vehicula iaculis lacinia. Fusce tincidunt viverra nisi non ultrices. Donec accumsan metus sed purus ullamcorper tincidunt. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
             ),
@@ -204,14 +204,14 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Documents', style: Theme.of(context).textTheme.headline5),
+            Text('Documents', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 2),
-            Expanded(
+            const Expanded(
               flex: 4,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Divider(thickness: 1),
                   Padding(
                     padding: EdgeInsets.only(left: 10.0),
@@ -236,9 +236,9 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Profile', style: Theme.of(context).textTheme.headline5),
+            Text('Profile', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 3),
-            Expanded(
+            const Expanded(
               flex: 3,
               child: Row(
                 children: [
@@ -247,20 +247,20 @@ class _ExamplePageState extends State<ExamplePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('username:'),
                         Text('email:'),
                         Text('birthday:'),
                       ],
                     ),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   Flexible(
                     flex: 5,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('John Doe'),
                         Text('john.doe@email.com'),
                         Text('1/1/1985'),
@@ -276,7 +276,7 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Settings', style: Theme.of(context).textTheme.headline5),
+            Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 1),
             Expanded(
               flex: 3,
@@ -288,13 +288,13 @@ class _ExamplePageState extends State<ExamplePage> {
                     title: const Text('Darkmode'),
                     value: false,
                     onChanged: (v) {},
-                    secondary: Icon(Ionicons.moon),
+                    secondary: const Icon(Ionicons.moon),
                   ),
                   SwitchListTile(
                     title: const Text('Analytics'),
                     value: false,
                     onChanged: (v) {},
-                    secondary: Icon(Ionicons.analytics),
+                    secondary: const Icon(Ionicons.analytics),
                   ),
                 ],
               ),
@@ -304,16 +304,16 @@ class _ExamplePageState extends State<ExamplePage> {
       ];
 
   List<Widget> _getTabs3(BuildContext context) => <Widget>[
-        Icon(
+        const Icon(
           Ionicons.information_circle,
         ),
-        Icon(
+        const Icon(
           Ionicons.document_text,
         ),
-        Icon(
+        const Icon(
           Ionicons.person,
         ),
-        Icon(
+        const Icon(
           Ionicons.settings,
         ),
       ];
@@ -325,7 +325,7 @@ class _ExamplePageState extends State<ExamplePage> {
             children: [
               Text(
                 'Page 1',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),
@@ -344,7 +344,7 @@ class _ExamplePageState extends State<ExamplePage> {
             children: [
               Text(
                 'Page 2',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),
@@ -364,7 +364,7 @@ Donec ac libero arcu. Pellentesque sollicitudin mi et lectus interdum, sit amet 
             children: [
               Text(
                 'Page 3',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),

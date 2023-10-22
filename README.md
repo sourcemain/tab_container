@@ -108,13 +108,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// The [TextStyle] applied to the text of the currently selected tab.
   ///
   /// Must specify values for the same properties as [unselectedTextStyle].
-  /// Defaults to Theme.of(context).textTheme.bodyText2.
+  /// Defaults to Theme.of(context).textTheme.bodyMedium.
   final TextStyle? selectedTextStyle;
 
   /// The [TextStyle] applied to the text of currently unselected tabs.
   ///
   /// Must specify values for the same properties as [selectedTextStyle].
-  /// Defaults to Theme.of(context).textTheme.bodyText2.
+  /// Defaults to Theme.of(context).textTheme.bodyMedium.
   final TextStyle? unselectedTextStyle;
 
   /// The [TextDirection] for tabs and semantics.
