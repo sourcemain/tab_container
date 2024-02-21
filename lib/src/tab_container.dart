@@ -56,6 +56,7 @@ class TabContainer extends ImplicitlyAnimatedWidget {
     Curve? childCurve,
     this.controller,
     this.radius = 12.0,
+    this.radiusTabStartEnd = 12,
     this.childPadding = EdgeInsets.zero,
     required this.children,
     required this.tabs,
@@ -101,6 +102,11 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   ///
   /// Defaults to 12.0.
   final double radius;
+
+  /// Set the curve radius
+  ///
+  /// Defaults to 12.0.
+  final double radiusTabStartEnd;
 
   /// Sets the padding to be applied around all [children].
   ///
@@ -397,6 +403,7 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
               CurvedAnimation(parent: animation, curve: widget.curve)) ??
           0.0,
       radius: widget.radius,
+      radiusTabStartEnd: widget.radiusTabStartEnd,
       child: Padding(
         padding: widget.childPadding,
         child: AnimatedSwitcher(
@@ -431,6 +438,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final TabContainerController controller;
   final double progress;
   final double radius;
+  final double radiusTabStartEnd;
   final Widget child;
   final List<Semantics> tabs;
   final double tabExtent;
@@ -447,6 +455,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.controller,
     required this.progress,
     required this.radius,
+    required this.radiusTabStartEnd,
     required this.child,
     required this.tabs,
     required this.tabExtent,
@@ -466,6 +475,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       controller: controller,
       progress: progress,
       radius: radius,
+      radiusTabStartEnd: radiusTabStartEnd,
       tabs: tabs,
       tabExtent: tabExtent,
       tabEdge: tabEdge,
@@ -507,6 +517,7 @@ class RenderTabFrame extends RenderBox
   TabContainerController _controller;
   double _progress;
   double _radius;
+  double radiusTabStartEnd;
   List<Semantics> _tabs;
   double _tabExtent;
   TabEdge _tabEdge;
@@ -522,6 +533,7 @@ class RenderTabFrame extends RenderBox
     required TabContainerController controller,
     required double progress,
     required double radius,
+    required double radiusTabStartEnd,
     required List<Semantics> tabs,
     required double tabExtent,
     required TabEdge tabEdge,
@@ -533,6 +545,7 @@ class RenderTabFrame extends RenderBox
     required TextDirection textDirection,
   })  : _context = context,
         _controller = controller,
+        radiusTabStartEnd = radiusTabStartEnd,
         _progress = progress,
         _radius = radius,
         _tabs = tabs,
@@ -678,7 +691,6 @@ class RenderTabFrame extends RenderBox
       case TabEdge.left:
         if (dx <= _tabExtent + _radius) {
           final double tabHeight = heightRange / _tabs.length;
-
           for (int i = 1; i <= _tabs.length; i++) {
             if (startHeight <= dy && dy <= endHeight) {
               if (dy < i * tabHeight + startHeight) {
@@ -976,19 +988,28 @@ class RenderTabFrame extends RenderBox
         rightPos,
         height - _tabExtent + _radius,
       )
-      ..lineTo(rightPos, height - _radius)
+      ..lineTo(
+          rightPos,
+          height -
+              (_tabs.length - 1 == _controller.index
+                  ? radiusTabStartEnd
+                  : _radius))
       ..quadraticBezierTo(
         rightPos,
         height,
-        rightPos - _radius,
+        rightPos -
+            (_tabs.length - 1 == _controller.index
+                ? radiusTabStartEnd
+                : _radius),
         height,
       )
-      ..lineTo(leftPos + _radius, height)
+      ..lineTo(leftPos + (_controller.index == 0 ? radiusTabStartEnd : _radius),
+          height)
       ..quadraticBezierTo(
         leftPos,
         height,
         leftPos,
-        height - _radius,
+        height - (_controller.index == 0 ? radiusTabStartEnd : _radius),
       )
       ..lineTo(leftPos, height - _tabExtent + _radius)
       ..quadraticBezierTo(
@@ -1035,18 +1056,24 @@ class RenderTabFrame extends RenderBox
         _tabExtent - _radius,
         rightPos,
       )
-      ..lineTo(_radius, rightPos)
+      ..lineTo(
+          (_tabs.length - 1 == _controller.index ? radiusTabStartEnd : _radius),
+          rightPos)
       ..quadraticBezierTo(
         0,
         rightPos,
         0,
-        rightPos - _radius,
+        rightPos -
+            (_tabs.length - 1 == _controller.index
+                ? radiusTabStartEnd
+                : _radius),
       )
-      ..lineTo(0, leftPos + _radius)
+      ..lineTo(
+          0, leftPos + (_controller.index == 0 ? radiusTabStartEnd : _radius))
       ..quadraticBezierTo(
         0,
         leftPos,
-        _radius,
+        (_controller.index == 0 ? radiusTabStartEnd : _radius),
         leftPos,
       )
       ..lineTo(_tabExtent - _radius, leftPos)
