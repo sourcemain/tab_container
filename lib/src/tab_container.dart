@@ -41,6 +41,7 @@ class TabContainerController extends ValueNotifier<int> {
     if (newIndex >= 0 && newIndex < length) {
       _prevIndex = _index;
       _index = newIndex;
+      value = _index;
       notifyListeners();
     }
   }
@@ -184,13 +185,13 @@ class TabContainer extends ImplicitlyAnimatedWidget {
   /// The [TextStyle] applied to the text of the currently selected tab.
   ///
   /// Must specify values for the same properties as [unselectedTextStyle].
-  /// Defaults to Theme.of(context).textTheme.bodyText2.
+  /// Defaults to Theme.of(context).textTheme.bodyMedium.
   final TextStyle? selectedTextStyle;
 
   /// The [TextStyle] applied to the text of currently unselected tabs.
   ///
   /// Must specify values for the same properties as [selectedTextStyle].
-  /// Defaults to Theme.of(context).textTheme.bodyText2.
+  /// Defaults to Theme.of(context).textTheme.bodyMedium.
   final TextStyle? unselectedTextStyle;
 
   /// The [TextDirection] for tabs and semantics.
@@ -366,10 +367,10 @@ class _TabContainerState extends AnimatedWidgetBaseState<TabContainer> {
   @override
   void didChangeDependencies() {
     _selectedTextStyle = widget.selectedTextStyle ??
-        Theme.of(context).textTheme.bodyText2 ??
+        Theme.of(context).textTheme.bodyMedium ??
         const TextStyle();
     _unselectedTextStyle = widget.unselectedTextStyle ??
-        Theme.of(context).textTheme.bodyText2 ??
+        Theme.of(context).textTheme.bodyMedium ??
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     _tabExtent = max(widget.tabExtent, widget.radius * 2);
