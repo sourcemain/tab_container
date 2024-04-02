@@ -8,6 +8,11 @@ import 'package:flutter/rendering.dart';
 /// Specifies which side the tabs will be on.
 enum TabEdge { left, top, right, bottom }
 
+@Deprecated('Use native TabController instead.')
+class TabContainerController extends ValueNotifier<int> {
+  TabContainerController(super.value);
+}
+
 extension on double {
   bool isBetween(double num1, double num2) {
     return num1 <= this && this <= num2;
@@ -92,7 +97,7 @@ class _TabViewport {
 
 /// Displays [children] in accordance with the tab selection.
 ///
-/// Handles styling and animation and exposes control over tab selection through [TabContainerController].
+/// Handles styling and animation and exposes control over tab selection through [TabController].
 class TabContainer extends StatefulWidget {
   const TabContainer({
     super.key,
@@ -122,6 +127,13 @@ class TabContainer extends StatefulWidget {
     this.enableFeedback = true,
     this.childDuration,
     this.childCurve,
+    @Deprecated('Replaced with borderRadius and tabBorderRadius.') radius,
+    @Deprecated('String tabs should be replaced with Text widgets.')
+    isStringTabs,
+    @Deprecated('Use duration instead') tabDuration,
+    @Deprecated('Use curve instead') tabCurve,
+    @Deprecated('Use tabsStart instead') tabStart,
+    @Deprecated('Use tabsEnd instead') tabEnd,
   })  : assert((children == null) != (child == null)),
         assert((children != null) ? children.length == tabs.length : true),
         assert(controller == null ? true : controller.length == tabs.length),
@@ -240,7 +252,7 @@ class TabContainer extends StatefulWidget {
   /// Not used if [child] is supplied.
   final Widget Function(Widget, Animation<double>)? transitionBuilder;
 
-  /// Set to true if each [Text] tabs properties should be used instead of the implicitly animated ones.
+  /// Set to true if each [Text] tabs given properties should be used instead of the implicitly animated ones.
   ///
   /// Defaults to false.
   final bool overrideTextProperties;
@@ -362,10 +374,12 @@ class _TabContainerState extends State<TabContainer>
   }
 
   void _tabListener() {
-    _spectrum = ColorTween(
-      begin: widget.colors![_controller.previousIndex],
-      end: widget.colors![_controller.index],
-    );
+    if (widget.colors != null) {
+      _spectrum = ColorTween(
+        begin: widget.colors?[_controller.previousIndex],
+        end: widget.colors?[_controller.index],
+      );
+    }
     _buildChild();
   }
 
@@ -966,7 +980,8 @@ class RenderTabFrame extends RenderBox
             Path()
               ..addRect(
                   Offset(0, tabViewport.start - tabBorderRadius.bottomRight.x) &
-                      tabViewport.size),
+                      (tabViewport.size +
+                          Offset(0, tabBorderRadius.bottomRight.x))),
             Path()
               ..addRect(Rect.fromPoints(
                   Offset(tabExtent, 0), Offset(width, height))));
@@ -983,7 +998,8 @@ class RenderTabFrame extends RenderBox
               ..addRect(Offset(
                       tabViewport.start - tabBorderRadius.bottomRight.x,
                       height - tabExtent) &
-                  tabViewport.size),
+                  (tabViewport.size +
+                      Offset(tabBorderRadius.bottomRight.x, 0))),
             Path()
               ..addRect(Rect.fromPoints(
                   const Offset(0, 0), Offset(width, height - tabExtent))));

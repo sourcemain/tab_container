@@ -1,3 +1,17 @@
+## 3.0.0
+
+BREAKING:
+ - TabContainer now extends StatefulWidget instead of ImplicitlyAnimatedWidget.
+ - Accepts native TabController instead of custom TabContainerController.
+ - Now hit tests widgets within the tabs so MouseRegion and Buttons will work inside tabs.
+ - No longer accepts a List<String> for tabs. Suggestion: replace raw strings with Text widgets.
+ - Allow different border radius for every corner. Suggestion: use properties borderRadius and
+tabBorderRadius instead of radius.
+ - Allow limiting the maximum length of each tab.
+ - Allow a single child to be supplied instead of children so TabContainer can serve as a switch
+if used with a manual TabController.
+ - Improved performance and changed some property names.
+
 ## 2.0.0
 
 BREAKING:

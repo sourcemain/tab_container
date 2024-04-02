@@ -1,14 +1,12 @@
 name: tab_container
-description: Animated and customisable tab view widget.
-  It's self-contained, so you can just pass in children and tabs, or
-  also use a controller, change the tab side, add color(s), and more.
-version: 2.0.0
+description: Animated and customisable tab view/carousel. Just pass in children and tabs, or use a TabController, change the tab side, add color(s), and more.
+version: 3.0.0
 homepage: https://github.com/sourcemain/tab_container
 repository: https://github.com/sourcemain/tab_container
 
 environment:
-  sdk: ">=3.3.1 <4.0.0"
-#  flutter: ">=1.17.0"
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=2.0.0"
 
 dependencies:
   flutter:

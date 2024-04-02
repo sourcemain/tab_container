@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:tab_container/tab_container.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const ExamplePage(),
+    );
+  }
+}
+
 class ExamplePage extends StatefulWidget {
-  const ExamplePage({Key? key}) : super(key: key);
+  const ExamplePage({super.key});
 
   @override
   _ExamplePageState createState() => _ExamplePageState();
 }
 
-class _ExamplePageState extends State<ExamplePage> {
-  late final TabContainerController _controller;
+class _ExamplePageState extends State<ExamplePage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _controller;
   late TextTheme textTheme;
 
   @override
   void initState() {
-    _controller = TabContainerController(length: 3);
     super.initState();
+    _controller = TabController(vsync: this, length: 3);
   }
 
   @override
@@ -39,18 +60,18 @@ class _ExamplePageState extends State<ExamplePage> {
       ),
       body: SingleChildScrollView(
         child: SizedBox(
-          height: 1800,
+          height: 2000,
           child: Column(
             children: [
               const Spacer(),
               SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
+                width: 400,
                 child: AspectRatio(
                   aspectRatio: 10 / 8,
                   child: TabContainer(
-                    radius: 20,
+                    borderRadius: BorderRadius.circular(20),
                     tabEdge: TabEdge.bottom,
-                    tabCurve: Curves.easeIn,
+                    curve: Curves.easeIn,
                     transitionBuilder: (child, animation) {
                       animation = CurvedAnimation(
                           curve: Curves.easeIn, parent: animation);
@@ -71,70 +92,72 @@ class _ExamplePageState extends State<ExamplePage> {
                       Color(0xff9aebed),
                     ],
                     selectedTextStyle:
-                        textTheme.bodyText2?.copyWith(fontSize: 15.0),
+                        textTheme.bodyMedium?.copyWith(fontSize: 15.0),
                     unselectedTextStyle:
-                        textTheme.bodyText2?.copyWith(fontSize: 13.0),
-                    children: _getChildren1(),
+                        textTheme.bodyMedium?.copyWith(fontSize: 13.0),
                     tabs: _getTabs1(),
+                    children: _getChildren1(),
                   ),
                 ),
               ),
               const Spacer(),
               SizedBox(
-                height: 330.0,
+                height: 320.0,
+                width: 400,
                 child: TabContainer(
                   controller: _controller,
-                  radius: 0,
+                  borderRadius: BorderRadius.zero,
+                  tabBorderRadius: BorderRadius.zero,
                   color: Colors.black,
-                  tabDuration: const Duration(seconds: 0),
+                  duration: const Duration(seconds: 0),
                   selectedTextStyle:
-                      textTheme.bodyText2?.copyWith(color: Colors.white),
+                      textTheme.bodyMedium?.copyWith(color: Colors.white),
                   unselectedTextStyle:
-                      textTheme.bodyText2?.copyWith(color: Colors.black),
-                  children: _getChildren2(),
+                      textTheme.bodyMedium?.copyWith(color: Colors.black),
                   tabs: _getTabs2(),
+                  children: _getChildren2(),
                 ),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    onPressed: () => _controller.prev(),
-                    icon: Icon(Ionicons.arrow_back),
+                    onPressed: () => _controller.index -= 1,
+                    icon: const Icon(Icons.arrow_back),
                   ),
                   IconButton(
-                    onPressed: () => _controller.next(),
-                    icon: Icon(Ionicons.arrow_forward),
+                    onPressed: () => _controller.index += 1,
+                    icon: const Icon(Icons.arrow_forward),
                   ),
                 ],
               ),
               const Spacer(),
-              Expanded(
-                flex: 3,
+              SizedBox(
+                width: 400,
+                height: 400,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: TabContainer(
                     color: Theme.of(context).colorScheme.secondary,
                     tabEdge: TabEdge.right,
                     childPadding: const EdgeInsets.all(20.0),
-                    children: _getChildren3(context),
                     tabs: _getTabs3(context),
-                    isStringTabs: false,
+                    children: _getChildren3(context),
                   ),
                 ),
               ),
               const Spacer(),
-              Expanded(
-                flex: 4,
+              SizedBox(
+                width: 400,
+                height: 400,
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: TabContainer(
                     color: Theme.of(context).colorScheme.primary,
                     tabEdge: TabEdge.left,
-                    tabStart: 0.1,
-                    tabEnd: 0.6,
+                    tabsStart: 0.1,
+                    tabsEnd: 0.6,
                     childPadding: const EdgeInsets.all(20.0),
-                    children: _getChildren4(),
                     tabs: _getTabs4(),
                     selectedTextStyle: const TextStyle(
                       color: Colors.white,
@@ -144,6 +167,7 @@ class _ExamplePageState extends State<ExamplePage> {
                       color: Colors.black,
                       fontSize: 13.0,
                     ),
+                    children: _getChildren4(),
                   ),
                 ),
               ),
@@ -164,7 +188,7 @@ class _ExamplePageState extends State<ExamplePage> {
     return cards.map((e) => CreditCard(data: e)).toList();
   }
 
-  List<String> _getTabs1() {
+  List<Widget> _getTabs1() {
     List<CreditCardData> cards = kCreditCards
         .map(
           (e) => CreditCardData.fromJson(e),
@@ -173,21 +197,29 @@ class _ExamplePageState extends State<ExamplePage> {
 
     return cards
         .map(
-          (e) => '*' + e.number.substring(e.number.length - 4, e.number.length),
+          (e) => Text(
+              '*${e.number.substring(e.number.length - 4, e.number.length)}'),
         )
         .toList();
   }
 
   List<Widget> _getChildren2() {
     return <Widget>[
-      Image.asset('assets/car1.jpg'),
-      Image.asset('assets/car2.jpg'),
-      Image.asset('assets/car3.jpg'),
+      Image.network(
+          'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
+      Image.network(
+          'https://images.unsplash.com/photo-1494905998402-395d579af36f?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
+      Image.network(
+          'https://images.unsplash.com/photo-1583121274602-3e2820c69888?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'),
     ];
   }
 
-  List<String> _getTabs2() {
-    return <String>['Image 1', 'Image 2', 'Image 3'];
+  List<Widget> _getTabs2() {
+    return <Widget>[
+      const Text('Image 1'),
+      const Text('Image 2'),
+      const Text('Image 3')
+    ];
   }
 
   List<Widget> _getChildren3(BuildContext context) => <Widget>[
@@ -195,7 +227,7 @@ class _ExamplePageState extends State<ExamplePage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Info', style: Theme.of(context).textTheme.headline5),
+            Text('Info', style: Theme.of(context).textTheme.headlineSmall),
             const Text(
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam non ex ac metus facilisis pulvinar. In id nulla tellus. Donec vehicula iaculis lacinia. Fusce tincidunt viverra nisi non ultrices. Donec accumsan metus sed purus ullamcorper tincidunt. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
             ),
@@ -204,14 +236,14 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Documents', style: Theme.of(context).textTheme.headline5),
+            Text('Documents', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 2),
-            Expanded(
+            const Expanded(
               flex: 4,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Divider(thickness: 1),
                   Padding(
                     padding: EdgeInsets.only(left: 10.0),
@@ -236,9 +268,9 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Profile', style: Theme.of(context).textTheme.headline5),
+            Text('Profile', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 3),
-            Expanded(
+            const Expanded(
               flex: 3,
               child: Row(
                 children: [
@@ -247,20 +279,20 @@ class _ExamplePageState extends State<ExamplePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('username:'),
                         Text('email:'),
                         Text('birthday:'),
                       ],
                     ),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   Flexible(
                     flex: 5,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text('John Doe'),
                         Text('john.doe@email.com'),
                         Text('1/1/1985'),
@@ -276,7 +308,7 @@ class _ExamplePageState extends State<ExamplePage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Settings', style: Theme.of(context).textTheme.headline5),
+            Text('Settings', style: Theme.of(context).textTheme.headlineSmall),
             const Spacer(flex: 1),
             Expanded(
               flex: 3,
@@ -288,13 +320,13 @@ class _ExamplePageState extends State<ExamplePage> {
                     title: const Text('Darkmode'),
                     value: false,
                     onChanged: (v) {},
-                    secondary: Icon(Ionicons.moon),
+                    secondary: const Icon(Icons.nightlight_outlined),
                   ),
                   SwitchListTile(
                     title: const Text('Analytics'),
                     value: false,
                     onChanged: (v) {},
-                    secondary: Icon(Ionicons.analytics),
+                    secondary: const Icon(Icons.analytics),
                   ),
                 ],
               ),
@@ -304,17 +336,17 @@ class _ExamplePageState extends State<ExamplePage> {
       ];
 
   List<Widget> _getTabs3(BuildContext context) => <Widget>[
-        Icon(
-          Ionicons.information_circle,
+        const Icon(
+          Icons.info,
         ),
-        Icon(
-          Ionicons.document_text,
+        const Icon(
+          Icons.text_snippet,
         ),
-        Icon(
-          Ionicons.person,
+        const Icon(
+          Icons.person,
         ),
-        Icon(
-          Ionicons.settings,
+        const Icon(
+          Icons.settings,
         ),
       ];
 
@@ -325,7 +357,7 @@ class _ExamplePageState extends State<ExamplePage> {
             children: [
               Text(
                 'Page 1',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),
@@ -344,7 +376,7 @@ class _ExamplePageState extends State<ExamplePage> {
             children: [
               Text(
                 'Page 2',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),
@@ -364,7 +396,7 @@ Donec ac libero arcu. Pellentesque sollicitudin mi et lectus interdum, sit amet 
             children: [
               Text(
                 'Page 3',
-                style: Theme.of(context).textTheme.headline5?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
               ),
@@ -378,8 +410,12 @@ Donec ac libero arcu. Pellentesque sollicitudin mi et lectus interdum, sit amet 
         ),
       ];
 
-  List<String> _getTabs4() {
-    return <String>['1', '2', '3'];
+  List<Widget> _getTabs4() {
+    return <Widget>[
+      const Text('1'),
+      const Text('2'),
+      const Text('3'),
+    ];
   }
 }
 
@@ -388,10 +424,10 @@ class CreditCard extends StatelessWidget {
   final CreditCardData data;
 
   const CreditCard({
-    Key? key,
+    super.key,
     this.color,
     required this.data,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -411,12 +447,8 @@ class CreditCard extends StatelessWidget {
                 Text(
                   data.bank,
                 ),
-                Icon(
-                  data.number[0] == '4'
-                      ? FontAwesome5Brands.cc_visa
-                      : data.number[0] == '5'
-                          ? FontAwesome5Brands.cc_mastercard
-                          : FontAwesome5Regular.question_circle,
+                const Icon(
+                  Icons.person,
                   size: 36,
                 ),
               ],
@@ -502,7 +534,7 @@ const List<Map<String, dynamic>> kCreditCards = [
     'index': 0,
     'bank': 'Aerarium',
     'name': 'John Doe',
-    'number': '4540 1234 5678 2975',
+    'number': '5234 4321 1234 4321',
     'expiration': '11/25',
     'cvc': '123',
   },
@@ -510,7 +542,7 @@ const List<Map<String, dynamic>> kCreditCards = [
     'index': 1,
     'bank': 'Aerarium',
     'name': 'John Doe',
-    'number': '5450 8765 4321 6372',
+    'number': '4234 4321 1234 4321',
     'expiration': '07/24',
     'cvc': '321',
   },
@@ -518,7 +550,7 @@ const List<Map<String, dynamic>> kCreditCards = [
     'index': 2,
     'bank': 'Aerarium',
     'name': 'John Doe',
-    'number': '4540 4321 8765 7446',
+    'number': '5234 4321 1234 4321',
     'expiration': '09/23',
     'cvc': '456',
   },
