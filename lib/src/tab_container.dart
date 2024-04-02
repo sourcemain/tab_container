@@ -99,7 +99,8 @@ class TabContainer extends StatefulWidget {
     this.duration = const Duration(milliseconds: 300),
     this.curve = Curves.easeInOut,
     this.controller,
-    required this.children,
+    this.children,
+    this.child,
     required this.tabs,
     this.childPadding = EdgeInsets.zero,
     this.borderRadius = const BorderRadius.all(Radius.circular(12.0)),
@@ -121,7 +122,8 @@ class TabContainer extends StatefulWidget {
     this.enableFeedback = true,
     this.childDuration,
     this.childCurve,
-  })  : assert(children.length == tabs.length),
+  })  : assert((children == null) != (child == null)),
+        assert((children != null) ? children.length == tabs.length : true),
         assert(controller == null ? true : controller.length == tabs.length),
         assert(!(color != null && colors != null)),
         assert((colors ?? tabs).length == tabs.length),
@@ -135,6 +137,23 @@ class TabContainer extends StatefulWidget {
   ///
   /// If you provide one, you must dispose of it.
   final TabController? controller;
+
+  /// The list of children you want to tab through, in order.
+  ///
+  /// Must be equal in length to [tabs] and [colors] (if provided).
+  /// Must be null if [child] is supplied.
+  final List<Widget>? children;
+
+  /// Supply this if you want to control the child view yourself using [TabController].
+  ///
+  /// Must be equal in length to [tabs] and [colors] (if provided).
+  /// Must be null if [children] is supplied;
+  final Widget? child;
+
+  /// What will be displayed in each tab, in order.
+  ///
+  /// Must be equal in length to [children] and [colors] (if provided).
+  final List<Widget> tabs;
 
   /// Sets the border radius surrounding the children
   ///
@@ -150,16 +169,6 @@ class TabContainer extends StatefulWidget {
   ///
   /// Defaults to [EdgeInsets.zero].
   final EdgeInsets childPadding;
-
-  /// The list of children you want to tab through, in order.
-  ///
-  /// Must be equal in length to [tabs] and [colors] (if provided).
-  final List<Widget> children;
-
-  /// What will be displayed in each tab, in order.
-  ///
-  /// Must be equal in length to [children] and [colors] (if provided).
-  final List<Widget> tabs;
 
   /// Height of the tabs perpendicular to the [TabEdge].
   ///
@@ -216,16 +225,19 @@ class TabContainer extends StatefulWidget {
   /// Duration of the child transition animation when the tab selection changes.
   ///
   /// Defaults to [duration].
+  /// Not used if [child] is supplied.
   final Duration? childDuration;
 
   /// The curve of the child transition animation when the tab selection changes.
   ///
   /// Defaults to [curve].
+  /// Not used if [child] is supplied.
   final Curve? childCurve;
 
   /// Sets the child transition animation when the tab selection changes.
   ///
   /// Defaults to [AnimatedSwitcher.defaultTransitionBuilder].
+  /// Not used if [child] is supplied.
   final Widget Function(Widget, Animation<double>)? transitionBuilder;
 
   /// Set to true if each [Text] tabs properties should be used instead of the implicitly animated ones.
@@ -309,6 +321,18 @@ class _TabContainerState extends State<TabContainer>
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     super.didChangeDependencies();
+    if (widget.child == null) {
+      _buildChild();
+    }
+    _buildTabs();
+  }
+
+  @override
+  void didUpdateWidget(covariant TabContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.child == null) {
+      _buildChild();
+    }
     _buildTabs();
   }
 
@@ -321,11 +345,18 @@ class _TabContainerState extends State<TabContainer>
     super.dispose();
   }
 
+  double _animationFraction(double current, int previous, int next) {
+    if (next - previous == 0) {
+      return 1;
+    }
+    return (current - previous) / (next - previous);
+  }
+
   void _animationListener() {
     _progress = _controller.animation!.value;
     if (widget.colors != null) {
-      _color = _spectrum?.lerp((_progress - _controller.previousIndex) /
-          (_controller.index - _controller.previousIndex));
+      _color = _spectrum?.lerp(_animationFraction(
+          _progress, _controller.previousIndex, _controller.index));
     }
     _updateTabs(_controller.previousIndex, _controller.index);
   }
@@ -338,46 +369,38 @@ class _TabContainerState extends State<TabContainer>
     _buildChild();
   }
 
-  TextStyle _calculateTextStyle(int index, double progress) {
+  TextStyle _calculateTextStyle(int index) {
     final TextStyleTween styleTween = TextStyleTween(
       begin: _unselectedTextStyle,
       end: _selectedTextStyle,
     );
 
-    final int ceil = max(_controller.index, _controller.previousIndex);
-    final int floor = min(_controller.index, _controller.previousIndex);
-    final double pct = progress == ceil
-        ? 1
-        : ((progress - floor) / (floor == ceil ? 1 : ceil - floor).abs());
+    final double animationFraction = _animationFraction(
+        _progress, _controller.previousIndex, _controller.index);
 
     if (index == _controller.index) {
       return styleTween
-          .lerp(_controller.previousIndex > _controller.index ? 1 - pct : pct);
+          .lerp(animationFraction)
+          .copyWith(fontSize: _unselectedTextStyle.fontSize);
     } else if (index == _controller.previousIndex) {
       return styleTween
-          .lerp(_controller.previousIndex > _controller.index ? pct : 1 - pct);
+          .lerp(1 - animationFraction)
+          .copyWith(fontSize: _unselectedTextStyle.fontSize);
     } else {
       return _unselectedTextStyle;
     }
   }
 
-  double _calculateTextScale(int index, double progress) {
-    final int ceil = max(_controller.index, _controller.previousIndex);
-    final int floor = min(_controller.index, _controller.previousIndex);
-    final double pct = progress == ceil
-        ? 1
-        : ((progress - floor) / (floor == ceil ? 1 : ceil - floor).abs());
+  double _calculateTextScale(int index) {
+    final double animationFraction = _animationFraction(
+        _progress, _controller.previousIndex, _controller.index);
+    final double textRatio =
+        _selectedTextStyle.fontSize! / _unselectedTextStyle.fontSize!;
 
     if (index == _controller.index) {
-      return lerpDouble(
-          1,
-          _selectedTextStyle.fontSize! / _unselectedTextStyle.fontSize!,
-          _controller.previousIndex > _controller.index ? 1 - pct : pct)!;
+      return lerpDouble(1, textRatio, animationFraction)!;
     } else if (index == _controller.previousIndex) {
-      return lerpDouble(
-          1,
-          _selectedTextStyle.fontSize! / _unselectedTextStyle.fontSize!,
-          _controller.previousIndex > _controller.index ? pct : 1 - pct)!;
+      return lerpDouble(textRatio, 1, animationFraction)!;
     } else {
       return 1;
     }
@@ -385,6 +408,8 @@ class _TabContainerState extends State<TabContainer>
 
   Semantics _getTab(int index) {
     final Widget tab = widget.tabs[index];
+    final bool selected = index == _controller.index;
+
     final SemanticsProperties properties = SemanticsProperties(
       label: 'Tab ${index + 1} out of ${widget.tabs.length}',
       hint: 'Select tab ${index + 1}',
@@ -393,7 +418,7 @@ class _TabContainerState extends State<TabContainer>
           : tab is Icon
               ? tab.semanticLabel
               : null,
-      selected: index == _controller.index,
+      selected: selected,
       enabled: widget.enabled,
       button: true,
       inMutuallyExclusiveGroup: true,
@@ -402,35 +427,26 @@ class _TabContainerState extends State<TabContainer>
           : null,
     );
 
-    final double scale = _calculateTextScale(
-      index,
-      _progress,
-    );
-
-    final TextStyle style = _calculateTextStyle(
-      index,
-      _progress,
-    ).copyWith(fontSize: _unselectedTextStyle.fontSize);
-
     Widget child = tab;
 
     if (tab is Text && !widget.overrideTextProperties) {
-      child = Text(
-        tab.data ?? '',
-        textAlign: TextAlign.center,
-        overflow: TextOverflow.fade,
-        textDirection: _textDirection,
-        style: style,
+      child = Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()..scale(_calculateTextScale(index)),
+        child: Container(
+          child: DefaultTextStyle.merge(
+            child: tab,
+            textAlign: TextAlign.center,
+            overflow: TextOverflow.fade,
+            style: _calculateTextStyle(index),
+          ),
+        ),
       );
     }
 
     return Semantics.fromProperties(
       properties: properties,
-      child: Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()..scale(scale),
-        child: Container(child: child),
-      ),
+      child: child,
     );
   }
 
@@ -454,20 +470,21 @@ class _TabContainerState extends State<TabContainer>
   }
 
   void _buildChild() {
-    final Widget child = Padding(
-      padding: widget.childPadding,
-      child: AnimatedSwitcher(
-        duration: widget.childDuration ?? widget.duration,
-        switchInCurve: widget.childCurve ?? widget.curve,
-        transitionBuilder: widget.transitionBuilder ??
-            AnimatedSwitcher.defaultTransitionBuilder,
-        child: IndexedStack(
-          key: ValueKey<int>(_controller.index),
-          index: _controller.index,
-          children: widget.children,
-        ),
-      ),
-    );
+    Widget child = widget.child ??
+        Padding(
+          padding: widget.childPadding,
+          child: AnimatedSwitcher(
+            duration: widget.childDuration ?? widget.duration,
+            switchInCurve: widget.childCurve ?? widget.curve,
+            transitionBuilder: widget.transitionBuilder ??
+                AnimatedSwitcher.defaultTransitionBuilder,
+            child: IndexedStack(
+              key: ValueKey<int>(_controller.index),
+              index: _controller.index,
+              children: widget.children!,
+            ),
+          ),
+        );
 
     setState(() {
       _child = child;
