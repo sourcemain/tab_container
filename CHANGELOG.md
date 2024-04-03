@@ -1,3 +1,9 @@
+## 3.1.0
+
+Feature:
+ - Tab bar automatically becomes scrollable if there are too many tabs. Suggestion: specify tabMinLength.
+ - Improved animation quality.
+
 ## 3.0.0
 
 BREAKING:

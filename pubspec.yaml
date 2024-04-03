@@ -1,6 +1,6 @@
 name: tab_container
-description: Animated and customisable tab view/carousel. Just pass in children and tabs, or use a TabController, change the tab side, add color(s), and more.
-version: 3.0.0
+description: Customisable tab view/carousel with animated indicator. Just pass in children and tabs, or use a TabController, change the tab side, add color(s), and more.
+version: 3.1.0
 homepage: https://github.com/sourcemain/tab_container
 repository: https://github.com/sourcemain/tab_container
 
