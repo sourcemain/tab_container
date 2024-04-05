@@ -337,18 +337,14 @@ class _TabContainerState extends State<TabContainer>
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     super.didChangeDependencies();
-    if (widget.child == null) {
-      _buildChild();
-    }
+    _buildChild();
     _buildTabs();
   }
 
   @override
   void didUpdateWidget(covariant TabContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.child == null) {
-      _buildChild();
-    }
+    _buildChild();
     _buildTabs();
   }
 
@@ -883,6 +879,7 @@ class RenderTabFrame extends RenderBox
     super.detach();
 
     _tapGestureRecognizer.dispose();
+    _dragGestureRecognizer?.dispose();
   }
 
   @override
@@ -937,7 +934,7 @@ class RenderTabFrame extends RenderBox
     }
   }
 
-  double _pointerSignalEventDelta(PointerScrollEvent event) {
+  double _alignScrollDelta(PointerScrollEvent event) {
     final Set<LogicalKeyboardKey> pressed =
         HardwareKeyboard.instance.logicalKeysPressed;
     final bool flipAxes = pressed.any(
@@ -949,7 +946,7 @@ class RenderTabFrame extends RenderBox
 
   void _handlePointerScroll(PointerSignalEvent event) {
     assert(event is PointerScrollEvent);
-    final double delta = _pointerSignalEventDelta(event as PointerScrollEvent);
+    final double delta = _alignScrollDelta(event as PointerScrollEvent);
     scrollOffset += delta;
   }
 
@@ -957,23 +954,10 @@ class RenderTabFrame extends RenderBox
     final double dx = event.localPosition.dx;
     final double dy = event.localPosition.dy;
 
-    final _TabViewport tabViewport = _TabViewport(
-      parentSize: size,
-      tabEdge: tabEdge,
-      tabExtent: tabExtent,
-      tabsStart: tabsStart,
-      tabsEnd: tabsEnd,
-    );
-
-    final _TabMetrics tabMetrics = _TabMetrics(
-      count: tabs.length,
-      range: tabViewport.range,
-      minLength: tabMinLength,
-      maxLength: tabMaxLength,
-    );
+    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
 
     if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
-      final double delta = _pointerSignalEventDelta(event);
+      final double delta = _alignScrollDelta(event);
       if (delta != 0.0) {
         GestureBinding.instance.pointerSignalResolver
             .register(event, _handlePointerScroll);
@@ -985,20 +969,7 @@ class RenderTabFrame extends RenderBox
     final double dx = details.localPosition.dx;
     final double dy = details.localPosition.dy;
 
-    final _TabViewport tabViewport = _TabViewport(
-      parentSize: size,
-      tabEdge: tabEdge,
-      tabExtent: tabExtent,
-      tabsStart: tabsStart,
-      tabsEnd: tabsEnd,
-    );
-
-    final _TabMetrics tabMetrics = _TabMetrics(
-      count: tabs.length,
-      range: tabViewport.range,
-      minLength: tabMinLength,
-      maxLength: tabMaxLength,
-    );
+    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
 
     if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
       double pos = dx;
@@ -1023,6 +994,20 @@ class RenderTabFrame extends RenderBox
     final double dx = details.localPosition.dx;
     final double dy = details.localPosition.dy;
 
+    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
+
+    if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
+      scrollOffset -= details.primaryDelta!;
+    }
+  }
+
+  @override
+  bool get alwaysNeedsCompositing => _hasTabOverflow;
+
+  bool _hasTabOverflow = false;
+  double _tabOverflow = 0;
+
+  (_TabViewport, _TabMetrics) _getTabViewportAndMetrics() {
     final _TabViewport tabViewport = _TabViewport(
       parentSize: size,
       tabEdge: tabEdge,
@@ -1038,13 +1023,8 @@ class RenderTabFrame extends RenderBox
       maxLength: tabMaxLength,
     );
 
-    if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
-      scrollOffset -= details.primaryDelta!;
-    }
+    return (tabViewport, tabMetrics);
   }
-
-  bool _hasTabOverflow = false;
-  double _tabOverflow = 0;
 
   @override
   void performLayout() {
@@ -1092,22 +1072,13 @@ class RenderTabFrame extends RenderBox
     //Layout the tabs
     child = childAfter(child);
 
-    final _TabViewport tabViewport = _TabViewport(
-      parentSize: size,
-      tabEdge: tabEdge,
-      tabExtent: tabExtent,
-      tabsStart: tabsStart,
-      tabsEnd: tabsEnd,
-    );
-
-    final _TabMetrics tabMetrics = _TabMetrics(
-      count: tabs.length,
-      range: tabViewport.range,
-      minLength: tabMinLength,
-      maxLength: tabMaxLength,
-    );
+    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
 
     _tabOverflow = tabMetrics.totalLength - tabViewport.range;
+
+    if (_hasTabOverflow != _tabOverflow > 0) {
+      markNeedsCompositingBitsUpdate();
+    }
     _hasTabOverflow = _tabOverflow > 0;
 
     if (_hasTabOverflow) {
@@ -1139,8 +1110,8 @@ class RenderTabFrame extends RenderBox
         );
         if (tabEdge == TabEdge.right) {
           _clipPath = _clipPath.transform((Matrix4.identity()
-                ..scale(-1, 1)
-                ..translate(-size.width, 0))
+                ..scale(-1.0, 1.0)
+                ..translate(-size.width, 0.0))
               .storage);
         }
       } else {
@@ -1157,12 +1128,12 @@ class RenderTabFrame extends RenderBox
                 ),
               ),
             Path()
-              ..addRect(Rect.fromPoints(const Offset(0, 0),
-                  Offset(size.width, size.height - tabExtent))));
+              ..addRect(Rect.fromPoints(
+                  Offset.zero, Offset(size.width, size.height - tabExtent))));
         if (tabEdge == TabEdge.top) {
           _clipPath = _clipPath.transform((Matrix4.identity()
-                ..scale(1, -1)
-                ..translate(0, -size.height))
+                ..scale(1.0, -1.0)
+                ..translate(0.0, -size.height))
               .storage);
         }
       }
@@ -1285,20 +1256,7 @@ class RenderTabFrame extends RenderBox
     final double width = size.width;
     final double height = size.height;
 
-    final _TabViewport tabViewport = _TabViewport(
-      parentSize: size,
-      tabEdge: tabEdge,
-      tabExtent: tabExtent,
-      tabsStart: tabsStart,
-      tabsEnd: tabsEnd,
-    );
-
-    final _TabMetrics tabMetrics = _TabMetrics(
-      count: tabs.length,
-      range: tabViewport.range,
-      minLength: tabMinLength,
-      maxLength: tabMaxLength,
-    );
+    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
 
     final double leftPos =
         progress * tabMetrics.length + tabViewport.start - scrollOffset;
@@ -1346,8 +1304,8 @@ class RenderTabFrame extends RenderBox
         ..close();
       if (tabEdge == TabEdge.right) {
         return path.transform((Matrix4.identity()
-              ..scale(1, -1)
-              ..translate(0, -height))
+              ..scale(1.0, -1.0)
+              ..translate(0.0, -height))
             .storage);
       }
       return path;
@@ -1394,8 +1352,8 @@ class RenderTabFrame extends RenderBox
         ..close();
       if (tabEdge == TabEdge.top) {
         return path.transform((Matrix4.identity()
-              ..scale(1, -1)
-              ..translate(0, -height))
+              ..scale(1.0, -1.0)
+              ..translate(0.0, -height))
             .storage);
       }
       return path;
@@ -1431,6 +1389,11 @@ class RenderTabFrame extends RenderBox
       _clipPathLayer.layer = null;
       _paint(context, offset);
     }
+  }
+
+  @override
+  Rect? describeApproximatePaintClip(covariant RenderObject child) {
+    return Rect.fromPoints(Offset.zero, Offset(size.width, size.height));
   }
 
   @override

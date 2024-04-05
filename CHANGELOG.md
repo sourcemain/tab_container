@@ -1,3 +1,7 @@
+## 3.1.1
+
+Fix bug on mobile caused by matrix transform.
+
 ## 3.1.0
 
 Feature:
