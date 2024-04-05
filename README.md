@@ -2,7 +2,8 @@ Tab view/carousel widget with beautifully a animated indicator and simple usage.
 Just pass in a list of children and a list of tabs and it will handle the rest, or you can customise
 by using a TabController, changing the tab side, adding color(s), and much more.
 
-New in 3.1.0: Tab bar can be scrolled if there are too many tabs. (Use tabMinLength)
+FIXED in 3.1.1: Mobile Matrix4 transform error.
+NEW in 3.1.0: Tab bar can be scrolled if there are too many tabs. (Use tabMinLength)
 
 ## Demo
 
