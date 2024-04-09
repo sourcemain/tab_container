@@ -469,8 +469,8 @@ class _TabContainerState extends State<TabContainer>
     final bool selected = index == _controller.index;
 
     final SemanticsProperties properties = SemanticsProperties(
-      label: 'Tab ${index + 1} out of ${widget.tabs.length}',
-      hint: 'Select tab ${index + 1}',
+      label: 'Tab button ${index + 1} of ${widget.tabs.length}',
+      hint: 'Press to view tab ${index + 1}',
       value: tab is Text
           ? tab.semanticsLabel
           : tab is Icon
@@ -740,6 +740,7 @@ class RenderTabFrame extends RenderBox
     if (value == _controller) return;
     _controller = value;
     markNeedsLayout();
+    markNeedsSemanticsUpdate();
   }
 
   ScrollController get scrollController => _scrollController;
@@ -799,6 +800,7 @@ class RenderTabFrame extends RenderBox
     assert(value.isNotEmpty);
     _tabs = value;
     markNeedsLayout();
+    markNeedsSemanticsUpdate();
   }
 
   BorderRadius get borderRadius => _borderRadius;
@@ -907,6 +909,7 @@ class RenderTabFrame extends RenderBox
     if (value == _textDirection) return;
     _textDirection = value;
     markNeedsLayout();
+    markNeedsSemanticsUpdate();
   }
 
   @override
@@ -1454,9 +1457,29 @@ class RenderTabFrame extends RenderBox
     return Rect.fromPoints(Offset.zero, Offset(size.width, size.height));
   }
 
+  String _getTabSemanticText(int index, int length) {
+    return 'Viewing tab ${index + 1} of $length';
+  }
+
   @override
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
+    super.describeSemanticsConfiguration(config);
+
+    final int decreasedIndex = max(0, controller.index - 1);
+    final int increasedIndex = min(controller.index + 1, controller.length - 1);
+
     config
+      ..label = 'Tab view'
+      ..hint = 'Increase or decrease to view a different tab'
+      ..value = _getTabSemanticText(controller.index, controller.length)
+      ..decreasedValue = _getTabSemanticText(decreasedIndex, controller.length)
+      ..increasedValue = _getTabSemanticText(increasedIndex, controller.length)
+      ..onDecrease = () {
+        controller.index = decreasedIndex;
+      }
+      ..onIncrease = () {
+        controller.index = increasedIndex;
+      }
       ..textDirection = textDirection
       ..isEnabled = enabled;
   }
