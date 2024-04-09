@@ -1,3 +1,7 @@
+## 3.1.2
+
+Update TabController management.
+
 ## 3.1.1
 
 Fix bug on mobile caused by matrix transform.

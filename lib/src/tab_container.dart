@@ -292,6 +292,7 @@ class TabContainer extends StatefulWidget {
 class _TabContainerState extends State<TabContainer>
     with SingleTickerProviderStateMixin {
   late TabController _controller;
+  TabController? _defaultController;
   late ScrollController _scrollController;
   late Widget _child;
   List<Semantics> _tabs = <Semantics>[];
@@ -307,12 +308,17 @@ class _TabContainerState extends State<TabContainer>
   @override
   void initState() {
     super.initState();
-    _controller = widget.controller ??
-        TabController(
-          vsync: this,
-          animationDuration: widget.duration,
-          length: widget.tabs.length,
-        );
+    if (widget.controller == null) {
+      _defaultController = TabController(
+        vsync: this,
+        animationDuration: widget.duration,
+        length: widget.tabs.length,
+      );
+      _controller = _defaultController!;
+    } else {
+      _controller = widget.controller!;
+    }
+
     _controller.addListener(_tabListener);
     _controller.animation!.addListener(_animationListener);
 
@@ -337,6 +343,7 @@ class _TabContainerState extends State<TabContainer>
         const TextStyle();
     _textDirection = widget.textDirection ?? Directionality.of(context);
     super.didChangeDependencies();
+    _remountController();
     _buildChild();
     _buildTabs();
   }
@@ -344,6 +351,9 @@ class _TabContainerState extends State<TabContainer>
   @override
   void didUpdateWidget(covariant TabContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      _remountController();
+    }
     _buildChild();
     _buildTabs();
   }
@@ -354,7 +364,7 @@ class _TabContainerState extends State<TabContainer>
 
     _controller.animation?.removeListener(_animationListener);
     _controller.removeListener(_tabListener);
-    _controller.dispose();
+    _defaultController?.dispose();
 
     super.dispose();
   }
@@ -383,6 +393,38 @@ class _TabContainerState extends State<TabContainer>
       );
     }
     _buildChild();
+  }
+
+  void _remountController() {
+    if (widget.controller != null) {
+      if (widget.controller == _controller) {
+        return;
+      }
+    } else if (_defaultController != null &&
+        _defaultController == _controller) {
+      return;
+    }
+
+    _controller.animation?.removeListener(_animationListener);
+    _controller.removeListener(_tabListener);
+    _defaultController?.dispose();
+    _defaultController = null;
+
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _defaultController = TabController(
+        vsync: this,
+        animationDuration: widget.duration,
+        length: widget.tabs.length,
+      );
+      _controller = _defaultController!;
+    }
+
+    _controller.addListener(_tabListener);
+    _controller.animation!.addListener(_animationListener);
+
+    _progress = _controller.animation!.value;
   }
 
   TextStyle _calculateTextStyle(int index) {
@@ -514,6 +556,7 @@ class _TabContainerState extends State<TabContainer>
       scrollController: _scrollController,
       progress: _progress,
       curve: widget.curve,
+      duration: widget.duration,
       tabs: _tabs,
       borderRadius: widget.borderRadius,
       tabBorderRadius: widget.tabBorderRadius,
@@ -541,6 +584,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final ScrollController scrollController;
   final double progress;
   final Curve curve;
+  final Duration duration;
   final Widget child;
   final List<Semantics> tabs;
   final BorderRadius borderRadius;
@@ -563,6 +607,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.scrollController,
     required this.progress,
     required this.curve,
+    required this.duration,
     required this.child,
     required this.tabs,
     required this.borderRadius,
@@ -588,6 +633,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       scrollController: scrollController,
       progress: progress,
       curve: curve,
+      duration: duration,
       tabs: tabs,
       borderRadius: borderRadius,
       tabBorderRadius: tabBorderRadius,
@@ -613,6 +659,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       ..scrollController = scrollController
       ..progress = progress
       ..curve = curve
+      ..duration = duration
       ..tabs = tabs
       ..borderRadius = borderRadius
       ..tabBorderRadius = tabBorderRadius
@@ -642,6 +689,7 @@ class RenderTabFrame extends RenderBox
     required ScrollController scrollController,
     required double progress,
     required Curve curve,
+    required Duration duration,
     required List<Semantics> tabs,
     required BorderRadius borderRadius,
     required BorderRadius tabBorderRadius,
@@ -661,6 +709,7 @@ class RenderTabFrame extends RenderBox
         _scrollController = scrollController,
         _progress = progress,
         _curve = curve,
+        _duration = duration,
         _borderRadius = borderRadius,
         _tabBorderRadius = tabBorderRadius,
         _tabs = tabs,
@@ -732,6 +781,15 @@ class RenderTabFrame extends RenderBox
       return;
     }
     _curve = value;
+  }
+
+  Duration get duration => _duration;
+  Duration _duration;
+  set duration(Duration value) {
+    if (value == _duration) {
+      return;
+    }
+    _duration = value;
   }
 
   List<Semantics> get tabs => _tabs;
