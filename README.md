@@ -2,7 +2,8 @@ Tab view/carousel widget with a beautifully animated indicator and simple usage.
 Just pass in a list of children and a list of tabs and it will handle the rest, or you can customise
 by using a TabController, changing the tab side, adding color(s), and much more.
 
-NEW in 3.1.0: Tab bar can be scrolled if there are too many tabs. (Use tabMinLength)
+NEW in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength)
+
 
 ## Demo
 
@@ -16,7 +17,13 @@ NEW in 3.1.0: Tab bar can be scrolled if there are too many tabs. (Use tabMinLen
 
 Check the `/example` folder for full examples similar to above demo.
 
-Supply your own TabController to get/set the index.
+Supply your own TabController to manually get/set the index.
+Fully control the view with 'child' property alternative to 'children'.
+Specify per corner border radii.
+Customise animations.
+Change tab placement and sizing.
+
+Check the API for more.
 
 ```dart
 import 'package:tab_container/tab_container.dart';

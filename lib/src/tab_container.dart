@@ -746,9 +746,7 @@ class RenderTabFrame extends RenderBox
   ScrollController get scrollController => _scrollController;
   ScrollController _scrollController;
   set scrollController(ScrollController value) {
-    if (value == _scrollController) {
-      return;
-    }
+    if (value == _scrollController) return;
     _scrollController = value;
     markNeedsLayout();
   }
@@ -756,9 +754,7 @@ class RenderTabFrame extends RenderBox
   double get scrollOffset => _scrollOffset;
   double _scrollOffset = 0;
   set scrollOffset(double value) {
-    if (value == _scrollOffset || !_hasTabOverflow) {
-      return;
-    }
+    if (value == _scrollOffset || !_hasTabOverflow) return;
     _scrollOffset = value.clamp(0, _tabOverflow);
     markNeedsLayout();
   }
@@ -768,28 +764,29 @@ class RenderTabFrame extends RenderBox
   set progress(double value) {
     if (value == _progress) return;
     assert(value >= 0 && value <= _tabs.length);
+
     _progress = value;
-    if (value == value.floor() || value == value.ceil()) {
+
+    _implicitScroll();
+
+    if (_progress == _progress.round()) {
       markNeedsSemanticsUpdate();
     }
+
     markNeedsLayout();
   }
 
   Curve get curve => _curve;
   Curve _curve;
   set curve(Curve value) {
-    if (value == _curve) {
-      return;
-    }
+    if (value == _curve) return;
     _curve = value;
   }
 
   Duration get duration => _duration;
   Duration _duration;
   set duration(Duration value) {
-    if (value == _duration) {
-      return;
-    }
+    if (value == _duration) return;
     _duration = value;
   }
 
@@ -839,9 +836,7 @@ class RenderTabFrame extends RenderBox
   Axis get tabAxis => _tabAxis;
   Axis _tabAxis;
   set tabAxis(Axis value) {
-    if (value == _tabAxis) {
-      return;
-    }
+    if (value == _tabAxis) return;
     _tabAxis = value;
     markNeedsLayout();
   }
@@ -1015,9 +1010,7 @@ class RenderTabFrame extends RenderBox
     final double dx = event.localPosition.dx;
     final double dy = event.localPosition.dy;
 
-    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
-
-    if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
+    if (_tabViewport.contains(dx, dy, _tabMetrics.totalLength)) {
       final double delta = _alignScrollDelta(event);
       if (delta != 0.0) {
         GestureBinding.instance.pointerSignalResolver
@@ -1030,9 +1023,7 @@ class RenderTabFrame extends RenderBox
     final double dx = details.localPosition.dx;
     final double dy = details.localPosition.dy;
 
-    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
-
-    if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
+    if (_tabViewport.contains(dx, dy, _tabMetrics.totalLength)) {
       double pos = dx;
 
       if (tabAxis == Axis.vertical) {
@@ -1040,7 +1031,7 @@ class RenderTabFrame extends RenderBox
       }
 
       controller.animateTo(
-        (pos - tabViewport.start + scrollOffset) ~/ tabMetrics.length,
+        (pos - _tabViewport.start + scrollOffset) ~/ _tabMetrics.length,
         curve: curve,
       );
       if (enableFeedback) {
@@ -1055,10 +1046,27 @@ class RenderTabFrame extends RenderBox
     final double dx = details.localPosition.dx;
     final double dy = details.localPosition.dy;
 
-    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
-
-    if (tabViewport.contains(dx, dy, tabMetrics.totalLength)) {
+    if (_tabViewport.contains(dx, dy, _tabMetrics.totalLength)) {
       scrollOffset -= details.primaryDelta!;
+    }
+  }
+
+  void _implicitScroll() {
+    final (destinationStart, destinationEnd) =
+        _getIndicatorBounds(controller.index.toDouble());
+    if (destinationStart >= _tabViewport.start &&
+        destinationEnd <= _tabViewport.end) {
+      return;
+    }
+
+    final (indicatorStart, indicatorEnd) = _getIndicatorBounds(progress);
+
+    if (indicatorEnd > _tabViewport.end &&
+        indicatorStart >= _tabViewport.start) {
+      scrollOffset += indicatorEnd - _tabViewport.end;
+    } else if (indicatorStart < _tabViewport.start &&
+        indicatorEnd <= _tabViewport.end) {
+      scrollOffset += indicatorStart - _tabViewport.start;
     }
   }
 
@@ -1068,24 +1076,8 @@ class RenderTabFrame extends RenderBox
   bool _hasTabOverflow = false;
   double _tabOverflow = 0;
 
-  (_TabViewport, _TabMetrics) _getTabViewportAndMetrics() {
-    final _TabViewport tabViewport = _TabViewport(
-      parentSize: size,
-      tabEdge: tabEdge,
-      tabExtent: tabExtent,
-      tabsStart: tabsStart,
-      tabsEnd: tabsEnd,
-    );
-
-    final _TabMetrics tabMetrics = _TabMetrics(
-      count: tabs.length,
-      range: tabViewport.range,
-      minLength: tabMinLength,
-      maxLength: tabMaxLength,
-    );
-
-    return (tabViewport, tabMetrics);
-  }
+  late _TabViewport _tabViewport;
+  late _TabMetrics _tabMetrics;
 
   @override
   void performLayout() {
@@ -1133,9 +1125,22 @@ class RenderTabFrame extends RenderBox
     //Layout the tabs
     child = childAfter(child);
 
-    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
+    _tabViewport = _TabViewport(
+      parentSize: size,
+      tabEdge: tabEdge,
+      tabExtent: tabExtent,
+      tabsStart: tabsStart,
+      tabsEnd: tabsEnd,
+    );
 
-    _tabOverflow = tabMetrics.totalLength - tabViewport.range;
+    _tabMetrics = _TabMetrics(
+      count: tabs.length,
+      range: _tabViewport.range,
+      minLength: tabMinLength,
+      maxLength: tabMaxLength,
+    );
+
+    _tabOverflow = _tabMetrics.totalLength - _tabViewport.range;
 
     if (_hasTabOverflow != _tabOverflow > 0) {
       markNeedsCompositingBitsUpdate();
@@ -1143,10 +1148,10 @@ class RenderTabFrame extends RenderBox
     _hasTabOverflow = _tabOverflow > 0;
 
     if (_hasTabOverflow) {
-      final double viewportWidth = tabViewport.size.width;
-      final double viewportHeight = tabViewport.size.height;
+      final double viewportWidth = _tabViewport.size.width;
+      final double viewportHeight = _tabViewport.size.height;
       final double brx = tabBorderRadius.bottomRight.x;
-      final double cutoff = max(0, tabViewport.start - brx);
+      final double cutoff = max(0, _tabViewport.start - brx);
 
       if (tabAxis == Axis.vertical) {
         _clipPath = Path.combine(
@@ -1201,7 +1206,7 @@ class RenderTabFrame extends RenderBox
     }
 
     BoxConstraints tabConstraints = BoxConstraints(
-      maxWidth: tabMetrics.length,
+      maxWidth: _tabMetrics.length,
       maxHeight: tabExtent,
     );
 
@@ -1218,7 +1223,7 @@ class RenderTabFrame extends RenderBox
       final TabFrameParentData tabParentData =
           child.parentData as TabFrameParentData;
 
-      final double displacement = tabMetrics.length * index - scrollOffset;
+      final double displacement = _tabMetrics.length * index - scrollOffset;
 
       final EdgeInsets tabInsets = EdgeInsets.symmetric(
         vertical: (tabConstraints.maxHeight - child.size.height) / 4,
@@ -1229,24 +1234,24 @@ class RenderTabFrame extends RenderBox
         case TabEdge.left:
           tabParentData.offset = Offset(
             tabInsets.horizontal,
-            tabInsets.vertical + displacement + tabViewport.start,
+            tabInsets.vertical + displacement + _tabViewport.start,
           );
           break;
         case TabEdge.top:
           tabParentData.offset = Offset(
-            tabInsets.horizontal + displacement + tabViewport.start,
+            tabInsets.horizontal + displacement + _tabViewport.start,
             tabInsets.vertical,
           );
           break;
         case TabEdge.right:
           tabParentData.offset = Offset(
             size.width - tabInsets.horizontal - child.size.width,
-            tabInsets.vertical + displacement + tabViewport.start,
+            tabInsets.vertical + displacement + _tabViewport.start,
           );
           break;
         case TabEdge.bottom:
           tabParentData.offset = Offset(
-            tabInsets.horizontal + displacement + tabViewport.start,
+            tabInsets.horizontal + displacement + _tabViewport.start,
             size.height - tabInsets.vertical - child.size.height,
           );
           break;
@@ -1313,32 +1318,37 @@ class RenderTabFrame extends RenderBox
   final LayerHandle<ClipPathLayer> _clipPathLayer =
       LayerHandle<ClipPathLayer>();
 
+  (double, double) _getIndicatorBounds(double factor) {
+    final double start =
+        factor * _tabMetrics.length + _tabViewport.start - scrollOffset;
+    final double end = start + _tabMetrics.length;
+
+    return (start, end);
+  }
+
   Path _getPath() {
     final double width = size.width;
     final double height = size.height;
 
-    final (tabViewport, tabMetrics) = _getTabViewportAndMetrics();
+    final (indicatorStart, indicatorEnd) = _getIndicatorBounds(progress);
 
-    final double leftPos =
-        progress * tabMetrics.length + tabViewport.start - scrollOffset;
-    final double rightPos = leftPos + tabMetrics.length;
+    double? critical1;
+    double? critical2;
+    double? critical3;
+    double? critical4;
 
     if (tabAxis == Axis.vertical) {
-      double? critical1;
-      double? critical2;
-      double? critical3;
-      double? critical4;
       double tbrx = tabBorderRadius.bottomRight.x;
       double tblx = tabBorderRadius.bottomLeft.x;
       double tly = borderRadius.topLeft.y;
       double bly = borderRadius.bottomLeft.y;
-      if (leftPos < tbrx + tly) {
-        critical1 = tbrx / (tbrx + tly) * leftPos;
-        critical2 = tly / (tbrx + tly) * leftPos;
+      if (indicatorStart < tbrx + tly) {
+        critical1 = tbrx / (tbrx + tly) * indicatorStart;
+        critical2 = tly / (tbrx + tly) * indicatorStart;
       }
-      if (height - rightPos < tblx + bly) {
-        critical3 = bly / (tblx + bly) * (height - rightPos);
-        critical4 = tblx / (tblx + bly) * (height - rightPos);
+      if (height - indicatorEnd < tblx + bly) {
+        critical3 = bly / (tblx + bly) * (height - indicatorEnd);
+        critical4 = tblx / (tblx + bly) * (height - indicatorEnd);
       }
       Path path = Path()
         ..moveTo(width - borderRadius.topRight.x, 0)
@@ -1348,19 +1358,20 @@ class RenderTabFrame extends RenderBox
             width, height, width - borderRadius.bottomRight.x, height)
         ..lineTo(tabExtent + borderRadius.bottomLeft.x, height)
         ..quadraticBezierTo(tabExtent, height, tabExtent,
-            max(height - (critical3 ?? bly), rightPos))
-        ..lineTo(tabExtent, min(height, rightPos + (critical4 ?? tblx)))
-        ..quadraticBezierTo(tabExtent, rightPos,
-            tabExtent - tabBorderRadius.bottomLeft.y, rightPos)
-        ..lineTo(tabBorderRadius.topLeft.y, rightPos)
+            max(height - (critical3 ?? bly), indicatorEnd))
+        ..lineTo(tabExtent, min(height, indicatorEnd + (critical4 ?? tblx)))
+        ..quadraticBezierTo(tabExtent, indicatorEnd,
+            tabExtent - tabBorderRadius.bottomLeft.y, indicatorEnd)
+        ..lineTo(tabBorderRadius.topLeft.y, indicatorEnd)
         ..quadraticBezierTo(
-            0, rightPos, 0, rightPos - tabBorderRadius.topLeft.x)
-        ..lineTo(0, leftPos + tabBorderRadius.topRight.x)
-        ..quadraticBezierTo(0, leftPos, tabBorderRadius.topRight.y, leftPos)
-        ..lineTo(tabExtent - tabBorderRadius.bottomRight.y, leftPos)
-        ..quadraticBezierTo(tabExtent, leftPos, tabExtent,
-            max(0, leftPos - (critical1 ?? tbrx)))
-        ..lineTo(tabExtent, min(critical2 ?? tly, leftPos))
+            0, indicatorEnd, 0, indicatorEnd - tabBorderRadius.topLeft.x)
+        ..lineTo(0, indicatorStart + tabBorderRadius.topRight.x)
+        ..quadraticBezierTo(
+            0, indicatorStart, tabBorderRadius.topRight.y, indicatorStart)
+        ..lineTo(tabExtent - tabBorderRadius.bottomRight.y, indicatorStart)
+        ..quadraticBezierTo(tabExtent, indicatorStart, tabExtent,
+            max(0, indicatorStart - (critical1 ?? tbrx)))
+        ..lineTo(tabExtent, min(critical2 ?? tly, indicatorStart))
         ..quadraticBezierTo(tabExtent, 0, tabExtent + borderRadius.topLeft.x, 0)
         ..close();
       if (tabEdge == TabEdge.right) {
@@ -1371,21 +1382,17 @@ class RenderTabFrame extends RenderBox
       }
       return path;
     } else {
-      double? critical1;
-      double? critical2;
-      double? critical3;
-      double? critical4;
       double brx = borderRadius.bottomRight.x;
       double tblx = tabBorderRadius.bottomLeft.x;
       double tbrx = tabBorderRadius.topLeft.y;
       double blx = borderRadius.bottomLeft.x;
-      if (width - rightPos < brx + tblx) {
-        critical1 = brx / (brx + tblx) * (width - rightPos);
-        critical2 = tblx / (brx + tblx) * (width - rightPos);
+      if (width - indicatorEnd < brx + tblx) {
+        critical1 = brx / (brx + tblx) * (width - indicatorEnd);
+        critical2 = tblx / (brx + tblx) * (width - indicatorEnd);
       }
-      if (leftPos < tbrx + blx) {
-        critical3 = tbrx / (tbrx + blx) * (leftPos);
-        critical4 = blx / (tbrx + blx) * (leftPos);
+      if (indicatorStart < tbrx + blx) {
+        critical3 = tbrx / (tbrx + blx) * (indicatorStart);
+        critical4 = blx / (tbrx + blx) * (indicatorStart);
       }
       Path path = Path()
         ..moveTo(0, borderRadius.topLeft.y)
@@ -1394,20 +1401,22 @@ class RenderTabFrame extends RenderBox
         ..quadraticBezierTo(width, 0, width, borderRadius.topRight.y)
         ..lineTo(width, height - tabExtent - borderRadius.bottomRight.y)
         ..quadraticBezierTo(width, height - tabExtent,
-            max(width - (critical1 ?? brx), rightPos), height - tabExtent)
-        ..lineTo(min(width, rightPos + (critical2 ?? tblx)), height - tabExtent)
-        ..quadraticBezierTo(rightPos, height - tabExtent, rightPos,
+            max(width - (critical1 ?? brx), indicatorEnd), height - tabExtent)
+        ..lineTo(
+            min(width, indicatorEnd + (critical2 ?? tblx)), height - tabExtent)
+        ..quadraticBezierTo(indicatorEnd, height - tabExtent, indicatorEnd,
             height - tabExtent + tabBorderRadius.bottomLeft.y)
-        ..lineTo(rightPos, height - tabBorderRadius.topLeft.y)
-        ..quadraticBezierTo(
-            rightPos, height, rightPos - tabBorderRadius.topLeft.x, height)
-        ..lineTo(leftPos + tabBorderRadius.topRight.x, height)
-        ..quadraticBezierTo(
-            leftPos, height, leftPos, height - tabBorderRadius.topRight.y)
-        ..lineTo(leftPos, height - tabExtent + tabBorderRadius.bottomRight.y)
-        ..quadraticBezierTo(leftPos, height - tabExtent,
-            max(0, leftPos - (critical3 ?? tbrx)), height - tabExtent)
-        ..lineTo(min(critical4 ?? blx, leftPos), height - tabExtent)
+        ..lineTo(indicatorEnd, height - tabBorderRadius.topLeft.y)
+        ..quadraticBezierTo(indicatorEnd, height,
+            indicatorEnd - tabBorderRadius.topLeft.x, height)
+        ..lineTo(indicatorStart + tabBorderRadius.topRight.x, height)
+        ..quadraticBezierTo(indicatorStart, height, indicatorStart,
+            height - tabBorderRadius.topRight.y)
+        ..lineTo(
+            indicatorStart, height - tabExtent + tabBorderRadius.bottomRight.y)
+        ..quadraticBezierTo(indicatorStart, height - tabExtent,
+            max(0, indicatorStart - (critical3 ?? tbrx)), height - tabExtent)
+        ..lineTo(min(critical4 ?? blx, indicatorStart), height - tabExtent)
         ..quadraticBezierTo(0, height - tabExtent, 0,
             height - tabExtent - borderRadius.bottomLeft.y)
         ..close();
@@ -1465,7 +1474,7 @@ class RenderTabFrame extends RenderBox
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
     super.describeSemanticsConfiguration(config);
 
-    final int decreasedIndex = max(0, controller.index - 1);
+    final int decreasedIndex = max(controller.index - 1, 0);
     final int increasedIndex = min(controller.index + 1, controller.length - 1);
 
     config
@@ -1474,12 +1483,8 @@ class RenderTabFrame extends RenderBox
       ..value = _getTabSemanticText(controller.index, controller.length)
       ..decreasedValue = _getTabSemanticText(decreasedIndex, controller.length)
       ..increasedValue = _getTabSemanticText(increasedIndex, controller.length)
-      ..onDecrease = () {
-        controller.index = decreasedIndex;
-      }
-      ..onIncrease = () {
-        controller.index = increasedIndex;
-      }
+      ..onDecrease = enabled ? () => controller.index = decreasedIndex : null
+      ..onIncrease = enabled ? () => controller.index = increasedIndex : null
       ..textDirection = textDirection
       ..isEnabled = enabled;
   }

@@ -1,3 +1,9 @@
+## 3.2.0
+
+Features:
+ - Add implicit scrolling.
+ - Add 'onIncrease' and 'onDecrease' semantics configuration.
+
 ## 3.1.2
 
 Update TabController management.
@@ -8,7 +14,7 @@ Fix bug on mobile caused by matrix transform.
 
 ## 3.1.0
 
-Feature:
+Features:
  - Tab bar automatically becomes scrollable if there are too many tabs. Suggestion: specify tabMinLength.
  - Improved animation quality.
 
