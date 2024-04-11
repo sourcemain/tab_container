@@ -3,15 +3,16 @@ Just pass in a list of children and a list of tabs and it will handle the rest, 
 by using a TabController, changing the tab side, adding color(s), and much more.
 
 NEW in 3.3.0: Check the [semantics](#semantics) section.
+
 NEW in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength)
 
 
 ## Demo
 
-![](https://media.giphy.com/media/cEkR19IlJ4My225oGg/giphy.gif)
-![](https://media.giphy.com/media/cfcGdVa2qCARzhloBc/giphy.gif)
-![](https://media.giphy.com/media/pCMsQiashXbfc6VZDg/giphy.gif)
-![](https://media.giphy.com/media/17dmmdIzSaySZ8fZWB/giphy.gif)
+<img src="https://media.giphy.com/media/cEkR19IlJ4My225oGg/giphy.gif" width="400" alt="tab demo gif"/>
+<img src="https://media.giphy.com/media/cfcGdVa2qCARzhloBc/giphy.gif" width="400" alt="tab demo gif"/>
+<img src="https://media.giphy.com/media/pCMsQiashXbfc6VZDg/giphy.gif" width="400" alt="tab demo gif"/>
+<img src="https://media.giphy.com/media/17dmmdIzSaySZ8fZWB/giphy.gif" width="400" alt="tab demo gif"/>
 
 
 ## Usage
