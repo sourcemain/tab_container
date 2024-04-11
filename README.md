@@ -1,27 +1,28 @@
-Tab view/carousel widget with a beautifully animated indicator and simple usage.
-Just pass in a list of children and a list of tabs and it will handle the rest, or you can customise
+Tab view/carousel widget with a beautifully animated indicator and simple usage. 
+Just pass in a list of children and a list of tabs and it will handle the rest, or you can customise 
 by using a TabController, changing the tab side, adding color(s), and much more.
 
+NEW in 3.3.0: Check the [semantics](#semantics) section.
 NEW in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength)
 
 
 ## Demo
 
 ![](https://media.giphy.com/media/cEkR19IlJ4My225oGg/giphy.gif)
-![](https://media.giphy.com/media/UlPs2jVLFEypV0KtwV/giphy.gif)
+![](https://media.giphy.com/media/cfcGdVa2qCARzhloBc/giphy.gif)
 ![](https://media.giphy.com/media/pCMsQiashXbfc6VZDg/giphy.gif)
-![](https://media.giphy.com/media/ea0JPX6894p1QHRCh4/giphy.gif)
+![](https://media.giphy.com/media/17dmmdIzSaySZ8fZWB/giphy.gif)
 
 
 ## Usage
 
 Check the `/example` folder for full examples similar to above demo.
 
-Supply your own TabController to manually get/set the index.
-Fully control the view with 'child' property alternative to 'children'.
-Specify per corner border radii.
-Customise animations.
-Change tab placement and sizing.
+ - Supply your own TabController to manually get/set the index.
+ - Fully control the view with 'child' property alternative to 'children'.
+ - Specify per corner border radii.
+ - Customise animations.
+ - Change tab placement and sizing.
 
 Check the API for more.
 
@@ -90,11 +91,12 @@ class TabContainer extends StatefulWidget {
     this.tabEdge = TabEdge.top,
     this.tabsStart = 0.0,
     this.tabsEnd = 1.0,
-    this.tabMinLength = 0,
+    this.tabMinLength = 0.0,
     this.tabMaxLength = double.infinity,
     this.color,
     this.colors,
     this.transitionBuilder,
+    this.semanticsConfiguration,
     this.overrideTextProperties = false,
     this.selectedTextStyle,
     this.unselectedTextStyle,
@@ -221,6 +223,12 @@ class TabContainer extends StatefulWidget {
   /// Not used if [child] is supplied.
   final Widget Function(Widget, Animation<double>)? transitionBuilder;
 
+  /// The [SemanticsConfiguration] for the [RenderObject] of [TabContainer] itself, not its children or tabs.
+  /// You can completely control the accessibility behaviour by supplying this and wrapping your child and tabs in their own semantics.
+  ///
+  /// If non-null, this will be used instead of the default implementation.
+  final SemanticsConfiguration? semanticsConfiguration;
+
   /// Set to true if each [Text] tabs given properties should be used instead of the implicitly animated ones.
   ///
   /// Defaults to false.
@@ -256,6 +264,34 @@ class TabContainer extends StatefulWidget {
 ```
 
 
+## Semantics
+
+By default, TabContainer will no longer impose any additional semantic information onto the tabs or children. 
+It will just describe its own semantics configuration using [onIncrease] and [onDecrease] to change the tab index.
+You can completely override this by supplying your own [SemanticsConfiguration] in the 'semanticsConfiguration' property.
+If you want to prevent accessibility tools from getting stuck in your tabs, you can wrap each one in [ExcludeSemantics] or,
+if you do want them to be accessed, you can wrap each one similarly to below:
+
+```dart
+final SemanticsProperties properties = SemanticsProperties(
+  label: 'Tab button ${index + 1} of ${tabs.length}',
+  hint: 'Press to view tab ${index + 1}',
+  selected: selected,
+  enabled: enabled,
+  button: true,
+  inMutuallyExclusiveGroup: true,
+  onTap: enabled
+      ? () => _controller.animateTo(index, curve: curve)
+      : null,
+);
+
+return Semantics.fromProperties(
+  properties: properties,
+  child: tab,
+);
+```
+
+
 ## Additional information
 
 Icons used in the demo: [Ionicons](https://ionic.io/ionicons), [FontAwesome5](https://fontawesome.com/v5.15/icons?d=gallery&p=2&m=free)
@@ -264,5 +300,6 @@ Car photos used in the demo:
  - [https://unsplash.com/photos/eqW1MPinEV4](https://unsplash.com/photos/eqW1MPinEV4)
  - [https://unsplash.com/photos/N9Pf2J656aQ](https://unsplash.com/photos/N9Pf2J656aQ)
  - [https://unsplash.com/photos/2AovfzYV3rc](https://unsplash.com/photos/2AovfzYV3rc)
+ - [https://unsplash.com/photos/8qYE6LGHW-c](https://unsplash.com/photos/8qYE6LGHW-c)
 
 > Please [file any issues.](https://github.com/sourcemain/tab_container/issues)

@@ -1,3 +1,7 @@
+## 3.3.0
+
+Update default semantics implementation and allow total customisation of semantics. See README.
+
 ## 3.2.0
 
 Features:

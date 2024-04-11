@@ -115,11 +115,12 @@ class TabContainer extends StatefulWidget {
     this.tabEdge = TabEdge.top,
     this.tabsStart = 0.0,
     this.tabsEnd = 1.0,
-    this.tabMinLength = 0,
+    this.tabMinLength = 0.0,
     this.tabMaxLength = double.infinity,
     this.color,
     this.colors,
     this.transitionBuilder,
+    this.semanticsConfiguration,
     this.overrideTextProperties = false,
     this.selectedTextStyle,
     this.unselectedTextStyle,
@@ -253,7 +254,13 @@ class TabContainer extends StatefulWidget {
   /// Not used if [child] is supplied.
   final Widget Function(Widget, Animation<double>)? transitionBuilder;
 
-  /// Set to true if each [Text] tabs given properties should be used instead of the implicitly animated ones.
+  /// The [SemanticsConfiguration] for the [RenderObject] of [TabContainer] itself, not its children or tabs.
+  /// You can completely control the accessibility behaviour by supplying this and wrapping your child and tabs in their own semantics.
+  ///
+  /// If non-null, this will be used instead of the default implementation.
+  final SemanticsConfiguration? semanticsConfiguration;
+
+  /// Set to true if each [Text] tabs given properties should be used instead of [TabContainer]s implicitly animated ones.
   ///
   /// Defaults to false.
   final bool overrideTextProperties;
@@ -295,7 +302,7 @@ class _TabContainerState extends State<TabContainer>
   TabController? _defaultController;
   late ScrollController _scrollController;
   late Widget _child;
-  List<Semantics> _tabs = <Semantics>[];
+  List<Widget> _tabs = <Widget>[];
 
   late TextStyle _selectedTextStyle;
   late TextStyle _unselectedTextStyle;
@@ -460,51 +467,28 @@ class _TabContainerState extends State<TabContainer>
     } else if (index == _controller.previousIndex) {
       return lerpDouble(textRatio, 1, animationFraction)!;
     } else {
-      return 1;
+      return 1.0;
     }
   }
 
-  Semantics _getTab(int index) {
+  Widget _getTab(int index) {
     final Widget tab = widget.tabs[index];
-    final bool selected = index == _controller.index;
 
-    final SemanticsProperties properties = SemanticsProperties(
-      label: 'Tab button ${index + 1} of ${widget.tabs.length}',
-      hint: 'Press to view tab ${index + 1}',
-      value: tab is Text
-          ? tab.semanticsLabel
-          : tab is Icon
-              ? tab.semanticLabel
-              : null,
-      selected: selected,
-      enabled: widget.enabled,
-      button: true,
-      inMutuallyExclusiveGroup: true,
-      onTap: widget.enabled
-          ? () => _controller.animateTo(index, curve: widget.curve)
-          : null,
-    );
-
-    Widget child = tab;
-
-    if (tab is Text && !widget.overrideTextProperties) {
-      child = Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.identity()..scale(_calculateTextScale(index)),
-        child: Container(
-          child: DefaultTextStyle.merge(
-            child: tab,
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.fade,
-            style: _calculateTextStyle(index),
-          ),
-        ),
-      );
+    if (widget.overrideTextProperties) {
+      return tab;
     }
 
-    return Semantics.fromProperties(
-      properties: properties,
-      child: child,
+    return Transform(
+      alignment: Alignment.center,
+      transform: Matrix4.identity()..scale(_calculateTextScale(index)),
+      child: Container(
+        child: DefaultTextStyle.merge(
+          child: tab,
+          textAlign: TextAlign.center,
+          overflow: TextOverflow.fade,
+          style: _calculateTextStyle(index),
+        ),
+      ),
     );
   }
 
@@ -516,7 +500,7 @@ class _TabContainerState extends State<TabContainer>
   }
 
   void _buildTabs() {
-    List<Semantics> tabs = <Semantics>[];
+    List<Widget> tabs = <Widget>[];
 
     for (int index = 0; index < widget.tabs.length; index++) {
       tabs.add(_getTab(index));
@@ -558,6 +542,7 @@ class _TabContainerState extends State<TabContainer>
       curve: widget.curve,
       duration: widget.duration,
       tabs: _tabs,
+      // elevation: widget.elevation,
       borderRadius: widget.borderRadius,
       tabBorderRadius: widget.tabBorderRadius,
       tabExtent: widget.tabExtent,
@@ -571,6 +556,7 @@ class _TabContainerState extends State<TabContainer>
       tabMinLength: widget.tabMinLength,
       tabMaxLength: widget.tabMaxLength,
       color: _color ?? widget.color ?? Colors.transparent,
+      semanticsConfiguration: widget.semanticsConfiguration,
       enabled: widget.enabled,
       enableFeedback: widget.enableFeedback,
       textDirection: _textDirection,
@@ -586,7 +572,8 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final Curve curve;
   final Duration duration;
   final Widget child;
-  final List<Semantics> tabs;
+  final List<Widget> tabs;
+  // final double elevation;
   final BorderRadius borderRadius;
   final BorderRadius tabBorderRadius;
   final double tabExtent;
@@ -597,6 +584,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
   final double tabMinLength;
   final double tabMaxLength;
   final Color color;
+  final SemanticsConfiguration? semanticsConfiguration;
   final bool enabled;
   final bool enableFeedback;
   final TextDirection textDirection;
@@ -610,6 +598,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.duration,
     required this.child,
     required this.tabs,
+    // required this.elevation,
     required this.borderRadius,
     required this.tabBorderRadius,
     required this.tabExtent,
@@ -620,6 +609,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
     required this.tabMinLength,
     required this.tabMaxLength,
     required this.color,
+    required this.semanticsConfiguration,
     required this.enabled,
     required this.enableFeedback,
     required this.textDirection,
@@ -635,6 +625,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       curve: curve,
       duration: duration,
       tabs: tabs,
+      // elevation: elevation,
       borderRadius: borderRadius,
       tabBorderRadius: tabBorderRadius,
       tabExtent: tabExtent,
@@ -645,6 +636,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       tabMinLength: tabMinLength,
       tabMaxLength: tabMaxLength,
       color: color,
+      semanticsConfiguration: semanticsConfiguration,
       enabled: enabled,
       enableFeedback: enableFeedback,
       textDirection: textDirection,
@@ -661,6 +653,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       ..curve = curve
       ..duration = duration
       ..tabs = tabs
+      // ..elevation = elevation
       ..borderRadius = borderRadius
       ..tabBorderRadius = tabBorderRadius
       ..tabExtent = tabExtent
@@ -671,6 +664,7 @@ class TabFrame extends MultiChildRenderObjectWidget {
       ..tabMinLength = tabMinLength
       ..tabMaxLength = tabMaxLength
       ..color = color
+      ..semanticsConfiguration = semanticsConfiguration
       ..enabled = enabled
       ..enableFeedback = enableFeedback
       ..textDirection = textDirection;
@@ -690,7 +684,8 @@ class RenderTabFrame extends RenderBox
     required double progress,
     required Curve curve,
     required Duration duration,
-    required List<Semantics> tabs,
+    required List<Widget> tabs,
+    // required double elevation,
     required BorderRadius borderRadius,
     required BorderRadius tabBorderRadius,
     required double tabExtent,
@@ -701,6 +696,7 @@ class RenderTabFrame extends RenderBox
     required double tabMinLength,
     required double tabMaxLength,
     required Color color,
+    required SemanticsConfiguration? semanticsConfiguration,
     required bool enabled,
     required bool enableFeedback,
     required TextDirection textDirection,
@@ -710,9 +706,10 @@ class RenderTabFrame extends RenderBox
         _progress = progress,
         _curve = curve,
         _duration = duration,
+        _tabs = tabs,
+        // _elevation = elevation,
         _borderRadius = borderRadius,
         _tabBorderRadius = tabBorderRadius,
-        _tabs = tabs,
         _tabExtent = tabExtent,
         _tabEdge = tabEdge,
         _tabAxis = tabAxis,
@@ -721,6 +718,7 @@ class RenderTabFrame extends RenderBox
         _tabMinLength = tabMinLength,
         _tabMaxLength = tabMaxLength,
         _color = color,
+        _semanticsConfiguration = semanticsConfiguration,
         _enabled = enabled,
         _enableFeedback = enableFeedback,
         _textDirection = textDirection,
@@ -790,15 +788,24 @@ class RenderTabFrame extends RenderBox
     _duration = value;
   }
 
-  List<Semantics> get tabs => _tabs;
-  List<Semantics> _tabs;
-  set tabs(List<Semantics> value) {
+  List<Widget> get tabs => _tabs;
+  List<Widget> _tabs;
+  set tabs(List<Widget> value) {
     if (value == _tabs) return;
     assert(value.isNotEmpty);
     _tabs = value;
     markNeedsLayout();
     markNeedsSemanticsUpdate();
   }
+
+  // double get elevation => _elevation;
+  // double _elevation;
+  // set elevation(double value) {
+  //   if (value == _elevation) return;
+  //   assert(value >= 0);
+  //   _elevation = value;
+  //   markNeedsPaint();
+  // }
 
   BorderRadius get borderRadius => _borderRadius;
   BorderRadius _borderRadius;
@@ -879,6 +886,14 @@ class RenderTabFrame extends RenderBox
     if (value == _color) return;
     _color = value;
     markNeedsPaint();
+  }
+
+  SemanticsConfiguration? get semanticsConfiguration => _semanticsConfiguration;
+  SemanticsConfiguration? _semanticsConfiguration;
+  set semanticsConfiguration(SemanticsConfiguration? value) {
+    if (value == _semanticsConfiguration) return;
+    _semanticsConfiguration = value;
+    markNeedsSemanticsUpdate();
   }
 
   bool get enabled => _enabled;
@@ -1473,6 +1488,11 @@ class RenderTabFrame extends RenderBox
   @override
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
     super.describeSemanticsConfiguration(config);
+
+    if (semanticsConfiguration != null) {
+      config.absorb(semanticsConfiguration!);
+      return;
+    }
 
     final int decreasedIndex = max(controller.index - 1, 0);
     final int increasedIndex = min(controller.index + 1, controller.length - 1);
