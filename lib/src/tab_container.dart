@@ -1118,7 +1118,7 @@ class RenderTabFrame extends RenderBox
 
     child.layout(constraints.deflate(edges), parentUsesSize: true);
 
-    size = edges.inflateSize(constraints.constrain(child.size));
+    size = constraints.constrain(edges.inflateSize(child.size));
 
     final TabFrameParentData childParentData =
         child.parentData as TabFrameParentData;
