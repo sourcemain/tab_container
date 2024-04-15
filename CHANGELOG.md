@@ -1,3 +1,7 @@
+## 3.5.2
+
+Bugfix in scrolling and TabEdge.right.
+
 ## 3.5.1
 
 Optimise clipping.

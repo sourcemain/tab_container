@@ -1429,14 +1429,19 @@ class RenderTabFrame extends RenderBox
       double tblx = tabBorderRadius.bottomLeft.x;
       double tly = borderRadius.topLeft.y;
       double bly = borderRadius.bottomLeft.y;
-      if (indicatorStart < tbrx + tly) {
-        critical1 = tbrx / (tbrx + tly) * indicatorStart;
-        critical2 = tly / (tbrx + tly) * indicatorStart;
+
+      final double sum1 = tbrx + tly;
+      if (sum1 > 0 && indicatorStart < sum1) {
+        critical1 = tbrx / sum1 * indicatorStart;
+        critical2 = tly / sum1 * indicatorStart;
       }
-      if (height - indicatorEnd < tblx + bly) {
-        critical3 = bly / (tblx + bly) * (height - indicatorEnd);
-        critical4 = tblx / (tblx + bly) * (height - indicatorEnd);
+
+      final double sum2 = tblx + bly;
+      if (sum2 > 0 && height - indicatorEnd < sum2) {
+        critical3 = bly / sum2 * (height - indicatorEnd);
+        critical4 = tblx / sum2 * (height - indicatorEnd);
       }
+
       Path path = Path()
         ..moveTo(width - borderRadius.topRight.x, 0)
         ..quadraticBezierTo(width, 0, width, borderRadius.topRight.y)
@@ -1463,8 +1468,8 @@ class RenderTabFrame extends RenderBox
         ..close();
       if (tabEdge == TabEdge.right) {
         return path.transform((Matrix4.identity()
-              ..scale(1.0, -1.0)
-              ..translate(0.0, -height))
+              ..scale(-1.0, 1.0)
+              ..translate(-width, 0.0))
             .storage);
       }
       return path;
@@ -1473,14 +1478,19 @@ class RenderTabFrame extends RenderBox
       double tblx = tabBorderRadius.bottomLeft.x;
       double tbrx = tabBorderRadius.topLeft.y;
       double blx = borderRadius.bottomLeft.x;
-      if (width - indicatorEnd < brx + tblx) {
-        critical1 = brx / (brx + tblx) * (width - indicatorEnd);
-        critical2 = tblx / (brx + tblx) * (width - indicatorEnd);
+
+      final double sum1 = brx + tblx;
+      if (sum1 > 0 && width - indicatorEnd < sum1) {
+        critical1 = brx / sum1 * (width - indicatorEnd);
+        critical2 = tblx / sum1 * (width - indicatorEnd);
       }
-      if (indicatorStart < tbrx + blx) {
-        critical3 = tbrx / (tbrx + blx) * (indicatorStart);
-        critical4 = blx / (tbrx + blx) * (indicatorStart);
+
+      final double sum2 = tbrx + blx;
+      if (sum2 > 0 && indicatorStart < sum2) {
+        critical3 = tbrx / sum2 * (indicatorStart);
+        critical4 = blx / sum2 * (indicatorStart);
       }
+
       Path path = Path()
         ..moveTo(0, borderRadius.topLeft.y)
         ..quadraticBezierTo(0, 0, borderRadius.topLeft.x, 0)
