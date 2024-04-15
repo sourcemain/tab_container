@@ -1,3 +1,7 @@
+## 3.5.1
+
+Optimise clipping.
+
 ## 3.5.0
 
 Add new TabContainerFocus widget for wrapping TabContainer with a basic focus implementation.

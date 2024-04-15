@@ -1295,34 +1295,34 @@ class RenderTabFrame extends RenderBox
 
       final double displacement = _tabMetrics.length * index - scrollOffset;
 
-      final EdgeInsets tabInsets = EdgeInsets.symmetric(
-        vertical: (tabConstraints.maxHeight - child.size.height) / 4,
-        horizontal: (tabConstraints.maxWidth - child.size.width) / 4,
+      final EdgeInsets tabInsets = EdgeInsets.only(
+        top: (tabConstraints.maxHeight - child.size.height) / 2,
+        left: (tabConstraints.maxWidth - child.size.width) / 2,
       );
 
       switch (tabEdge) {
         case TabEdge.left:
           tabParentData.offset = Offset(
-            tabInsets.horizontal,
-            tabInsets.vertical + displacement + _tabViewport.start,
+            tabInsets.left,
+            tabInsets.top + displacement + _tabViewport.start,
           );
           break;
         case TabEdge.top:
           tabParentData.offset = Offset(
-            tabInsets.horizontal + displacement + _tabViewport.start,
-            tabInsets.vertical,
+            tabInsets.left + displacement + _tabViewport.start,
+            tabInsets.top,
           );
           break;
         case TabEdge.right:
           tabParentData.offset = Offset(
-            size.width - tabInsets.horizontal - child.size.width,
-            tabInsets.vertical + displacement + _tabViewport.start,
+            size.width - tabInsets.left - child.size.width,
+            tabInsets.top + displacement + _tabViewport.start,
           );
           break;
         case TabEdge.bottom:
           tabParentData.offset = Offset(
-            tabInsets.horizontal + displacement + _tabViewport.start,
-            size.height - tabInsets.vertical - child.size.height,
+            tabInsets.left + displacement + _tabViewport.start,
+            size.height - tabInsets.top - child.size.height,
           );
           break;
       }
@@ -1353,7 +1353,7 @@ class RenderTabFrame extends RenderBox
 
     child.getDryLayout(constraints.deflate(edges));
 
-    return edges.inflateSize(constraints.constrain(child.size));
+    return constraints.constrain(edges.inflateSize(child.size));
   }
 
   @override
@@ -1540,6 +1540,7 @@ class RenderTabFrame extends RenderBox
         Offset.zero & size,
         _clipPath!,
         _paint,
+        clipBehavior: Clip.hardEdge,
         oldLayer: _clipPathLayer.layer,
       );
     } else {
