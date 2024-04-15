@@ -1,3 +1,7 @@
+## 3.4.0
+
+Change sizing behaviour to wrap the child and add support for trackpad scrolling.
+
 ## 3.3.1
 
 Update README.

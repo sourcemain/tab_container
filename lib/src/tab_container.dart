@@ -997,6 +997,10 @@ class RenderTabFrame extends RenderBox
       if (_hasTabOverflow) {
         _onPointerScroll(event);
       }
+    } else if (event is PointerPanZoomStartEvent) {
+      if (_hasTabOverflow) {
+        _dragGestureRecognizer?.addPointerPanZoom(event);
+      }
     } else if (event is PointerDownEvent) {
       _tapGestureRecognizer.addPointer(event);
       if (_hasTabOverflow) {
@@ -1093,11 +1097,10 @@ class RenderTabFrame extends RenderBox
 
   late _TabViewport _tabViewport;
   late _TabMetrics _tabMetrics;
+  _TabViewport? _prevTabViewport;
 
   @override
   void performLayout() {
-    size = constraints.biggest;
-
     //Layout the main child
     RenderBox? child = firstChild;
 
@@ -1105,36 +1108,25 @@ class RenderTabFrame extends RenderBox
       return;
     }
 
-    BoxConstraints mainChildConstraints = BoxConstraints(
-      maxWidth: size.width,
-      maxHeight: size.height - tabExtent,
-    );
+    late final EdgeInsets edges;
+
     if (tabAxis == Axis.vertical) {
-      mainChildConstraints = BoxConstraints(
-        maxWidth: size.width - tabExtent,
-        maxHeight: size.height,
-      );
+      edges = EdgeInsets.only(left: tabExtent);
+    } else {
+      edges = EdgeInsets.only(top: tabExtent);
     }
 
-    child.layout(mainChildConstraints, parentUsesSize: true);
+    child.layout(constraints.deflate(edges), parentUsesSize: true);
+
+    size = edges.inflateSize(constraints.constrain(child.size));
 
     final TabFrameParentData childParentData =
         child.parentData as TabFrameParentData;
 
-    final EdgeInsets mainChildInsets = EdgeInsets.symmetric(
-      vertical: (mainChildConstraints.maxHeight - child.size.height) / 4,
-      horizontal: (mainChildConstraints.maxWidth - child.size.width) / 4,
-    );
-
-    childParentData.offset = Offset(
-      mainChildInsets.horizontal,
-      mainChildInsets.vertical,
-    );
-
     if (tabEdge == TabEdge.left) {
-      childParentData.offset += Offset(tabExtent, 0);
+      childParentData.offset = Offset(tabExtent, 0);
     } else if (tabEdge == TabEdge.top) {
-      childParentData.offset += Offset(0, tabExtent);
+      childParentData.offset = Offset(0, tabExtent);
     }
 
     //Layout the tabs
@@ -1155,6 +1147,11 @@ class RenderTabFrame extends RenderBox
       maxLength: tabMaxLength,
     );
 
+    bool tabViewportChanged = _prevTabViewport?.size != _tabViewport.size ||
+        _prevTabViewport?.start != _tabViewport.start;
+
+    _prevTabViewport = _tabViewport;
+
     _tabOverflow = _tabMetrics.totalLength - _tabViewport.range;
 
     if (_hasTabOverflow != _tabOverflow > 0) {
@@ -1162,7 +1159,7 @@ class RenderTabFrame extends RenderBox
     }
     _hasTabOverflow = _tabOverflow > 0;
 
-    if (_hasTabOverflow) {
+    if (_hasTabOverflow && (_clipPath == null || tabViewportChanged)) {
       final double viewportWidth = _tabViewport.size.width;
       final double viewportHeight = _tabViewport.size.height;
       final double brx = tabBorderRadius.bottomRight.x;
@@ -1190,7 +1187,7 @@ class RenderTabFrame extends RenderBox
             ),
         );
         if (tabEdge == TabEdge.right) {
-          _clipPath = _clipPath.transform((Matrix4.identity()
+          _clipPath = _clipPath!.transform((Matrix4.identity()
                 ..scale(-1.0, 1.0)
                 ..translate(-size.width, 0.0))
               .storage);
@@ -1212,7 +1209,7 @@ class RenderTabFrame extends RenderBox
               ..addRect(Rect.fromPoints(
                   Offset.zero, Offset(size.width, size.height - tabExtent))));
         if (tabEdge == TabEdge.top) {
-          _clipPath = _clipPath.transform((Matrix4.identity()
+          _clipPath = _clipPath!.transform((Matrix4.identity()
                 ..scale(1.0, -1.0)
                 ..translate(0.0, -size.height))
               .storage);
@@ -1226,10 +1223,7 @@ class RenderTabFrame extends RenderBox
     );
 
     if (tabAxis == Axis.vertical) {
-      tabConstraints = BoxConstraints(
-        maxWidth: tabConstraints.maxHeight,
-        maxHeight: tabConstraints.maxWidth,
-      );
+      tabConstraints = tabConstraints.flipped;
     }
 
     for (var index = 0; child != null; index++, child = childAfter(child)) {
@@ -1281,7 +1275,25 @@ class RenderTabFrame extends RenderBox
   bool get sizedByParent => false;
 
   @override
-  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+  Size computeDryLayout(BoxConstraints constraints) {
+    RenderBox? child = firstChild;
+
+    if (child == null) {
+      return Size.zero;
+    }
+
+    late final EdgeInsets edges;
+
+    if (tabAxis == Axis.vertical) {
+      edges = EdgeInsets.only(left: tabExtent);
+    } else {
+      edges = EdgeInsets.only(top: tabExtent);
+    }
+
+    child.getDryLayout(constraints.deflate(edges));
+
+    return edges.inflateSize(constraints.constrain(child.size));
+  }
 
   @override
   double computeMinIntrinsicWidth(double height) {
@@ -1328,8 +1340,7 @@ class RenderTabFrame extends RenderBox
     return defaultComputeDistanceToHighestActualBaseline(baseline);
   }
 
-  Path _clipPath = Path();
-
+  Path? _clipPath;
   final LayerHandle<ClipPathLayer> _clipPathLayer =
       LayerHandle<ClipPathLayer>();
 
@@ -1461,12 +1472,12 @@ class RenderTabFrame extends RenderBox
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    if (_hasTabOverflow) {
+    if (_hasTabOverflow && _clipPath != null) {
       _clipPathLayer.layer = context.pushClipPath(
         needsCompositing,
         offset,
         Offset.zero & size,
-        _clipPath,
+        _clipPath!,
         _paint,
         oldLayer: _clipPathLayer.layer,
       );
