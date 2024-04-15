@@ -565,6 +565,67 @@ class _TabContainerState extends State<TabContainer>
   }
 }
 
+/// Wrapper for [TabContainer] that provides a basic focus implementation.
+class TabContainerFocus extends StatefulWidget {
+  const TabContainerFocus({
+    super.key,
+    required this.controller,
+    required this.child,
+    this.focusDecoration,
+    this.focusPadding,
+  });
+
+  /// Needs to be the same [TabController] used by [child].
+  final TabController controller;
+
+  /// The [TabContainer] you want to wrap. Its [TabController] must be the same as [controller].
+  final Widget child;
+
+  /// The [BoxDecoration] displayed around [child] when it has focus.
+  ///
+  /// This could simply be a rounded black border.
+  final BoxDecoration? focusDecoration;
+
+  /// The padding displayed around [child] when it has focus.
+  final EdgeInsets? focusPadding;
+
+  @override
+  _TabContainerFocusState createState() => _TabContainerFocusState();
+}
+
+class _TabContainerFocusState extends State<TabContainerFocus> {
+  bool _hasFocus = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      onFocusChange: (focused) {
+        setState(() {
+          _hasFocus = focused;
+        });
+      },
+      onKeyEvent: (node, event) {
+        if (event is KeyDownEvent || event is KeyRepeatEvent) {
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            widget.controller.animateTo(max(widget.controller.index - 1, 0));
+            return KeyEventResult.handled;
+          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            widget.controller.animateTo(
+                min(widget.controller.index + 1, widget.controller.length - 1));
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Container(
+        decoration: _hasFocus ? widget.focusDecoration : null,
+        padding: _hasFocus ? widget.focusPadding : null,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 class TabFrame extends MultiChildRenderObjectWidget {
   final TabController controller;
   final ScrollController scrollController;

@@ -2,10 +2,13 @@ Tab view/carousel widget with a beautifully animated indicator and simple usage.
 Just pass in a list of children and a list of tabs and it will handle the rest, or you can customise 
 by using a TabController, changing the tab side, adding color(s), and much more.
 
-NEW in 3.3.0: Check the [semantics](#semantics) section.
+Check the [focus](#focus) and [semantics](#semantics) sections and [file any issues.](https://github.com/sourcemain/tab_container/issues)
 
-NEW in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength)
+> New in 3.5.0: [TabContainerFocus](#focus) widget.
 
+> New in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength).
+
+---
 
 ## Demo
 
@@ -14,18 +17,24 @@ NEW in 3.1.0: Automatic scrolling if there are too many tabs. (Use tabMinLength)
 <img src="https://media.giphy.com/media/pCMsQiashXbfc6VZDg/giphy.gif" width="400" alt="tab demo gif"/>
 <img src="https://media.giphy.com/media/17dmmdIzSaySZ8fZWB/giphy.gif" width="400" alt="tab demo gif"/>
 
+---
 
 ## Usage
 
-Check the `/example` folder for full examples similar to above demo.
+Check the [/example](https://pub.dev/packages/tab_container/example) folder for full examples similar to the above demo.
 
- - Supply your own TabController to manually get/set the index.
- - Fully control the view with 'child' property alternative to 'children'.
+ - Supply your own `TabController` to manually get/set the index.
+ - Fully control the view with `child:` property alternative to `children:`, i.e, 
+you can use it as a switch container as well as a tab container.
  - Specify per corner border radii.
  - Customise animations.
  - Change tab placement and sizing.
+ - Wrap with [TabContainerFocus](#focus).
 
-Check the API for more.
+Check the [API](#api) for much more.
+
+
+#### Minimal:
 
 ```dart
 import 'package:tab_container/tab_container.dart';
@@ -73,6 +82,53 @@ TabContainer(
 );
 ```
 
+### Focus
+
+`TabContainer` intentionally has no built-in focus implementation. Create your own or, 
+to add one that maps arrow keys to the index, you can wrap your `TabContainer` with `TabContainerFocus`:
+
+```dart
+TabContainerFocus(
+  controller: _controller,
+  focusDecoration: BoxDecoration(
+    border: const Border.fromBorderSide(BorderSide(width: 4)),
+    borderRadius: BorderRadius.circular(10),
+  ),
+  focusPadding: const EdgeInsets.all(3),
+  child: TabContainer(
+    controller: _controller,
+    //...
+  ),
+),
+```
+
+### Semantics
+
+By default, `TabContainer` will no longer impose any additional semantic information onto the tabs or children.
+It will just describe its own semantics configuration using `onIncrease` and `onDecrease` to change the tab index.
+You can completely override this by supplying your own `SemanticsConfiguration` in the `semanticsConfiguration:` property.
+If you want to prevent accessibility tools from getting stuck in your tab bar, you can wrap each tab in `ExcludeSemantics` or,
+if you do want them to be accessed, you can wrap each one similarly to below:
+
+```dart
+final SemanticsProperties properties = SemanticsProperties(
+  label: 'Tab button ${index + 1} of ${tabs.length}',
+  hint: 'Press to view tab ${index + 1}',
+  selected: selected,
+  enabled: enabled,
+  button: true,
+  inMutuallyExclusiveGroup: true,
+  onTap: enabled
+      ? () => _controller.animateTo(index, curve: curve)
+      : null,
+);
+
+return Semantics.fromProperties(
+  properties: properties,
+  child: tab,
+);
+```
+---
 
 ## API:
 ```dart
@@ -263,35 +319,7 @@ class TabContainer extends StatefulWidget {
   final bool enableFeedback;
 }
 ```
-
-
-## Semantics
-
-By default, TabContainer will no longer impose any additional semantic information onto the tabs or children. 
-It will just describe its own semantics configuration using [onIncrease] and [onDecrease] to change the tab index.
-You can completely override this by supplying your own [SemanticsConfiguration] in the 'semanticsConfiguration' property.
-If you want to prevent accessibility tools from getting stuck in your tabs, you can wrap each one in [ExcludeSemantics] or,
-if you do want them to be accessed, you can wrap each one similarly to below:
-
-```dart
-final SemanticsProperties properties = SemanticsProperties(
-  label: 'Tab button ${index + 1} of ${tabs.length}',
-  hint: 'Press to view tab ${index + 1}',
-  selected: selected,
-  enabled: enabled,
-  button: true,
-  inMutuallyExclusiveGroup: true,
-  onTap: enabled
-      ? () => _controller.animateTo(index, curve: curve)
-      : null,
-);
-
-return Semantics.fromProperties(
-  properties: properties,
-  child: tab,
-);
-```
-
+---
 
 ## Additional information
 

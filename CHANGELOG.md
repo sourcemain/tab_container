@@ -1,3 +1,7 @@
+## 3.5.0
+
+Add new TabContainerFocus widget for wrapping TabContainer with a basic focus implementation.
+
 ## 3.4.0
 
 Change sizing behaviour to wrap the child and add support for trackpad scrolling.
