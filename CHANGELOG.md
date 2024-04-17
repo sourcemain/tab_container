@@ -1,3 +1,7 @@
+## 3.5.3
+
+Update documentation and bugfixes.
+
 ## 3.5.2
 
 Bugfix in scrolling and TabEdge.right.

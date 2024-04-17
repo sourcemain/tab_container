@@ -1351,9 +1351,9 @@ class RenderTabFrame extends RenderBox
       edges = EdgeInsets.only(top: tabExtent);
     }
 
-    child.getDryLayout(constraints.deflate(edges));
+    final Size childSize = child.getDryLayout(constraints.deflate(edges));
 
-    return constraints.constrain(edges.inflateSize(child.size));
+    return constraints.constrain(edges.inflateSize(childSize));
   }
 
   @override

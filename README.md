@@ -28,6 +28,7 @@ Check the [/example](https://pub.dev/packages/tab_container/example) folder for 
 you can use it as a switch container as well as a tab container.
  - Specify per corner border radii.
  - Customise animations.
+ - Wrap each tab with `MouseRegion(...Center(...` if you want cursor effects.
  - Change tab placement and sizing.
  - Wrap with [TabContainerFocus](#focus).
 
